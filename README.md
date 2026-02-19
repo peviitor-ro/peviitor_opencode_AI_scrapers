@@ -1,5 +1,8 @@
 # Peviitor OpenCode AI Scrapers
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 Automation project for scraping job data from peviitor.ro platform using OpenCode AI agents.
 
 ## Features
@@ -67,6 +70,14 @@ peviitor_opencode_AI_scrapers/
 - [Data Schemas](docs/schemas.html)
 - [Tests](docs/tests.html)
 
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## License
 
-Private - All rights reserved
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
