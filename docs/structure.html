@@ -55,6 +55,13 @@
         <section>
             <h2>Arbore Foldere</h2>
             <pre class="folder-tree"><span class="folder">peviitor_opencode_AI_scrapers/</span>
+├── <span class="folder">.github/</span>                   # GitHub workflows și templates
+│   ├── <span class="folder">workflows/</span>
+│   │   └── <span class="md">pages.yml</span>              # GitHub Pages deployment
+│   ├── <span class="folder">ISSUE_TEMPLATE/</span>
+│   │   ├── <span class="md">bug-report.md</span>
+│   │   └── <span class="md">feature-request.md</span>
+│   └── <span class="md">PULL_REQUEST_TEMPLATE.md</span>
 ├── <span class="folder">docs/</span>                  # Documentație HTML
 │   ├── index.html
 │   ├── structure.html
@@ -76,27 +83,52 @@
 │   │   └── <span class="md">clean-project.md</span>
 │   └── package.json
 ├── <span class="folder">webscraper/</span>             # Prompt-uri scraping per companie
-│   ├── <span class="md">websites.md</span>            # Lista companii + scraper files
-│   ├── <span class="md">epam.md</span>               # Prompt scraping EPAM
-│   ├── <span class="md">endava.md</span>             # Prompt scraping ENDAVA
-│   ├── <span class="md">bento.md</span>              # Prompt scraping BENTO
-│   ├── <span class="md">genpact.md</span>            # Prompt scraping GENPACT
-│   ├── <span class="md">orange.md</span>              # Prompt scraping ORANGE
-│   ├── <span class="md">farmec.md</span>              # Prompt scraping FARMEC
-│   ├── <span class="md">vodafone.md</span>            # Prompt scraping VODAFONE
-│   ├── <span class="md">ntt-data.md</span>            # Prompt scraping NTT DATA
-│   ├── <span class="md">eurodealer.md</span>          # Prompt scraping EURODEALER
-│   ├── <span class="md">ddroidd.md</span>            # Prompt scraping DDROIDD
-│   └── <span class="md">coera.md</span>              # Prompt scraping COERA
+│   ├── <span class="md">websites.md</span>            # Lista companii
+│   ├── <span class="md">epam.md</span>               # EPAM
+│   ├── <span class="md">endava.md</span>             # ENDAVA
+│   ├── <span class="md">bento.md</span>              # BENTO
+│   ├── <span class="md">genpact.md</span>            # GENPACT
+│   ├── <span class="md">orange.md</span>              # ORANGE
+│   ├── <span class="md">farmec.md</span>              # FARMEC
+│   ├── <span class="md">vodafone.md</span>            # VODAFONE
+│   ├── <span class="md">ntt-data.md</span>            # NTT DATA
+│   ├── <span class="md">luxoft.md</span>              # LUXOFT
+│   ├── <span class="md">ddroidd.md</span>            # DDROIDD
+│   ├── <span class="md">levi9.md</span>              # LEVI9
+│   ├── <span class="md">kaufland.md</span>            # KAUFLAND
+│   ├── <span class="md">hornbach.md</span>            # HORNBACH
+│   ├── <span class="md">carrefour.md</span>           # CARREFOUR
+│   ├── <span class="md">garmin.md</span>              # GARMIN
+│   ├── <span class="md">emerson.md</span>             # EMERSON
+│   ├── <span class="md">bitdefender.md</span>         # BITDEFENDER
+│   ├── <span class="md">stefanini.md</span>           # STEFANINI
+│   ├── <span class="md">assist-software.md</span>     # ASSIST SOFTWARE
+│   ├── <span class="md">codespring.md</span>          # CODESPERING
+│   ├── <span class="md">connatix.md</span>           # CONNATIX
+│   ├── <span class="md">coera.md</span>              # COERA
+│   ├── <span class="md">einfra.md</span>             # EINFRA
+│   ├── <span class="md">eurodealer.md</span>         # EURODEALER
+│   ├── <span class="md">netmatch.md</span>           # NETMATCH
+│   ├── <span class="md">recognos.md</span>            # RECOGNOS
+│   ├── <span class="md">senior-software.md</span>      # SENIOR SOFTWARE
+│   ├── <span class="md">ascom.md</span>              # ASCOM
+│   ├── <span class="md">wayfare.md</span>             # WAYFARE
+│   ├── <span class="md">wolters-kluwer.md</span>      # WOLTERS KLUWER
+│   └── <span class="md">borgdesign.md</span>          # BORG DESIGN
 ├── <span class="folder">tests/</span>                   # Teste Playwright
 │   ├── *.test.ts
 │   ├── README.md
 │   ├── package.json
 │   └── playwright.config.ts
 ├── <span class="ps1">start-chrome.ps1</span>          # Script pornire Chrome
-├── <span class="md">AGENTS.md</span>                 # Documentație pentru AI
+├── <span class="md">README.md</span>                  # Documentație proiect
 ├── <span class="md">SCHEMAS.md</span>                # Schema date (Job, Company)
+├── <span class="md">AGENTS.md</span>                 # Documentație pentru AI
 ├── <span class="md">INSTRUCTIONS.md</span>          # Instrucțiuni pentru AI
+├── <span class="md">LICENSE</span>                    # Licență MIT
+├── <span class="md">CONTRIBUTING.md</span>           # Ghid contribuții
+├── <span class="md">CODE_OF_CONDUCT.md</span>        # Cod de conduită
+├── <span class="md">SECURITY.md</span>                # Politică securitate
 └── <span class="json">opencode.json</span>            # Configurare OpenCode</pre>
         </section>
 
@@ -125,8 +157,20 @@
                     <td>Comenzi personalizate: <code>/scrape</code>, <code>/update-solr</code>, <code>/login-solr</code>, <code>/delete-solr</code>, <code>/add-website</code>, <code>/docs-update</code>, <code>/instructions</code>, <code>/remove-404</code>, <code>/clean-project</code></td>
                 </tr>
                 <tr>
+                    <td><code>.github/</code></td>
+                    <td>GitHub workflows și templates pentru issues și PR-uri.</td>
+                </tr>
+                <tr>
+                    <td><code>.github/workflows/</code></td>
+                    <td>GitHub Actions workflows. Conține pages.yml pentru GitHub Pages.</td>
+                </tr>
+                <tr>
+                    <td><code>.github/ISSUE_TEMPLATE/</code></td>
+                    <td>Template-uri pentru bug reports și feature requests.</td>
+                </tr>
+                <tr>
                     <td><code>webscraper/</code></td>
-                    <td>Prompt-uri de scraping specifice per companie. Conține fișiere .md pentru EPAM, ENDAVA, BENTO, GENPACT, ORANGE, FARMEC, VODAFONE, NTT DATA, EURODEALER, DDROIDD, COERA.</td>
+                    <td>Prompt-uri de scraping specifice per companie. Conține 27 fișiere .md pentru diferite companii IT în România.</td>
                 </tr>
                 <tr>
                     <td><code>webscraper/websites.md</code></td>
@@ -151,6 +195,26 @@
                 <tr>
                     <td><code>INSTRUCTIONS.md</code></td>
                     <td>Instrucțiuni pentru AI - fluxuri de lucru, comenzi, reguli</td>
+                </tr>
+                <tr>
+                    <td><code>README.md</code></td>
+                    <td>Documentație principală a proiectului - introducere, setup, comenzi</td>
+                </tr>
+                <tr>
+                    <td><code>LICENSE</code></td>
+                    <td>Licență MIT - permisivă pentru utilizare open source</td>
+                </tr>
+                <tr>
+                    <td><code>CONTRIBUTING.md</code></td>
+                    <td>Ghid pentru contribuții - cum să raportezi bug-uri și să faci PR-uri</td>
+                </tr>
+                <tr>
+                    <td><code>CODE_OF_CONDUCT.md</code></td>
+                    <td>Codul de conduită al comunității</td>
+                </tr>
+                <tr>
+                    <td><code>SECURITY.md</code></td>
+                    <td>Politica de securitate și raportare vulnerabilități</td>
                 </tr>
                 <tr>
                     <td><code>opencode.json</code></td>
