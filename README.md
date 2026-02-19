@@ -87,3 +87,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Security
 
 See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
+
