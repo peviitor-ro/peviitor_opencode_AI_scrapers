@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comenzi - Peviitor OpenCode AI Scrapers</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center; }
+        header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        nav { background: #2c3e50; padding: 1rem; position: sticky; top: 0; z-index: 100; }
+        nav ul { list-style: none; display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; }
+        nav a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; }
+        nav a:hover { background: #34495e; }
+        nav a.active { background: #667eea; }
+        main { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        section { background: white; border-radius: 8px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        h3 { color: #34495e; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        code { background: #f4f4f4; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; }
+        pre { background: #282c34; color: #abb2bf; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
+        pre code { background: none; padding: 0; color: inherit; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f4f4f4; }
+        tr:hover { background: #f9f9f9; }
+        .command { background: #667eea; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: monospace; }
+        .step { background: #f9f9f9; padding: 1rem; margin: 0.5rem 0; border-left: 4px solid #667eea; border-radius: 0 6px 6px 0; }
+        .note { background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 4px; }
+        footer { background: #2c3e50; color: white; text-align: center; padding: 2rem; margin-top: 3rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚡ Comenzi Personalizate</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Acasă</a></li>
+            <li><a href="structure.html">Structura Proiectului</a></li>
+            <li><a href="commands.html" class="active">Comenzi</a></li>
+            <li><a href="tests.html">Teste</a></li>
+            <li><a href="schemas.html">Schema Date</a></li>
+            <li><a href="setup.html">Setup</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Comenzi Disponibile</h2>
+            <p>Aceste comenzi sunt definite în <code>.opencode/commands/</code> și pot fi folosite în OpenCode.</p>
+            
+            <table>
+                <tr>
+                    <th>Comandă</th>
+                    <th>Descriere</th>
+                </tr>
+                <tr>
+                    <td><code>/scrape</code></td>
+                    <td>Rulează scraper-ul pentru o companie specifică</td>
+                </tr>
+                <tr>
+                    <td><code>/update-solr</code></td>
+                    <td>Actualizează indexul Solr cu date noi</td>
+                </tr>
+                <tr>
+                    <td><code>/delete-solr</code></td>
+                    <td>Șterge documente job din Solr</td>
+                </tr>
+                <tr>
+                    <td><code>/login-solr</code></td>
+                    <td>Deschide panoul de admin Solr</td>
+                </tr>
+                <tr>
+                    <td><code>/add-website</code></td>
+                    <td>Adaugă o nouă companie în websites.md</td>
+                </tr>
+                <tr>
+                    <td><code>/docs-update</code></td>
+                    <td>Actualizează documentația proiectului</td>
+                </tr>
+                <tr>
+                    <td><code>/instructions</code></td>
+                    <td>Afișează instrucțiunile pentru AI</td>
+                </tr>
+                <tr>
+                    <td><code>/remove-404</code></td>
+                    <td>Validează URL-uri job și șterge job-urile inactive</td>
+                </tr>
+                <tr>
+                    <td><code>/clean-project</code></td>
+                    <td>Curăță fișierele temporare și actualizează documentația</td>
+                </tr>
+            </table>
+        </section>
+
+        <section>
+            <h2><span class="command">/scrape [nume_companie]</span></h2>
+            <p>Rulează scraper-ul pentru o companie specifică.</p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/scrape EPAM
+/scrape ENDAVA
+/scrape "EPAM SYSTEMS INTERNATIONAL SRL"</code></pre>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Caută compania în <code>webscraper/websites.md</code> (caută după Brand SAU Company)</div>
+            <div class="step">2. Dacă există, citește fișierul scraper specific (ex: epam.md, endava.md)</div>
+            <div class="step">3. Deschide Chrome și navighează la pagina de cariere</div>
+            <div class="step">4. Extrage job-urile conform prompt-ului din scraper file</div>
+            <div class="step">5. Extrage tag-urile (seniority + field) conform instrucțiunilor</div>
+            <div class="step">6. Formatează datele conform Job Schema (fără description!)</div>
+            <div class="step">7. Trimite către Solr</div>
+            <div class="step">8. Actualizează "Last Scraped" în websites.md</div>
+            
+            <div class="note">
+                <strong>Notă:</strong> Pentru fiecare companie există un fișier scraper în <code>webscraper/</code> (epam.md, endava.md, bento.md, genpact.md). Acestea conțin instrucțiuni specifice pentru extragerea job-urilor și tag-urilor.
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="command">/update-solr</span></h2>
+            <p>Actualizează indexul Solr cu date noi.</p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/update-solr</code></pre>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Verifică dacă Solr rulează: <code>curl http://localhost:8983/solr/</code></div>
+            <div class="step">2. Dacă nu rulează, pornește containerul: <code>docker start peviitor-solr</code></div>
+            <div class="step">3. Adaugă/actualizează documente în Solr folosind API-ul</div>
+            <div class="step">4. Verifică că actualizarea a fost făcută cu succes</div>
+            
+            <h3>Exemplu API:</h3>
+            <pre><code>curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+  'http://localhost:8983/solr/job/update?commit=true' \
+  -d '[{"url":"https://example.com/job","title":"Software Engineer","company":"Example"}]'</code></pre>
+        </section>
+
+        <section>
+            <h2><span class="command">/login-solr</span></h2>
+            <p>Deschide panoul de admin Solr în Chrome și face login.</p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/login-solr</code></pre>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Verifică că Solr rulează</div>
+            <div class="step">2. Deschide Chrome la <code>http://localhost:8983/solr/</code></div>
+            <div class="step">3. Completează formularul de login:</div>
+            <div class="step" style="margin-left: 1rem;">- Username: <code>solr</code></div>
+            <div class="step" style="margin-left: 1rem;">- Password: <code>SolrRocks</code></div>
+            <div class="step">4. Verifică că login-ul a reușit</div>
+            <div class="step">5. Face un screenshot pentru confirmare</div>
+        </section>
+
+        <section>
+            <h2><span class="command">/delete-solr url:https://example.com/job</span></h2>
+            <p>Șterge documente job din Solr bazat pe o cheie specifică (implicit: url).</p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/delete-solr url:https://example.com/job
+/delete-solr company:Test Company
+/delete-solr title:Software Engineer</code></pre>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Verifică că Solr rulează</div>
+            <div class="step">2. Parsează cheia și valoarea din argumente</div>
+            <div class="step">3. Implicit, folosește "url" ca cheie</div>
+            <div class="step">4. Șterge documentele care se potrivesc din job core</div>
+            <div class="step">5. Verifică că ștergerea a reușit</div>
+            
+            <h3>Exemplu API (corect):</h3>
+            <pre><code>curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+  'http://localhost:8983/solr/job/update?commit=true' \
+  -d '{"delete":{"query":"url:\"https://example.com/job\""}}'</code></pre>
+            
+            <div class="note">
+                <strong>Important:</strong> NU folosi formatul <code>"_delete_":true</code> - acesta nu funcționează corect. Folosește întotdeauna formatul delete-by-query arătat mai sus.
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="command">/add-website</span></h2>
+            <p>Adaugă o nouă companie în fișierul websites.md.</p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/add-website "Company Name|Brand|https://website.com|https://careers.com|CUI12345678"</code></pre>
+            
+            <h3>Argumente (separate prin pipe):</h3>
+            <ul>
+                <li>Numele complet al companiei (ex: "EPAM SYSTEMS INTERNATIONAL SRL")</li>
+                <li>Brand-ul (ex: "EPAM")</li>
+                <li>URL-ul site-ului companiei (ex: "https://epam.com")</li>
+                <li>URL-ul paginii de cariere (ex: "https://careers.epam.com")</li>
+                <li>CUI-ul companiei (ex: "33159615")</li>
+            </ul>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Parsează argumentele</div>
+            <div class="step">2. Citește webscraper/websites.md</div>
+            <div class="step">3. Adaugă un nou rând în tabel (cu coloanele: Brand, Company, Website, Careers Page, CUI, Last Scraped, Scraper File)</div>
+            <div class="step">4. Scrie fișierul actualizat</div>
+            <div class="step">5. Creează fișierul scraper în webscraper/ (ex: epam.md)</div>
+            
+            <div class="note">
+                <strong>Notă:</strong> După adăugare, trebuie creat fișierul scraper (ex: epam.md) cu instrucțiuni specifice pentru companie.
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="command">/docs-update</span></h2>
+            <p>Actualizează documentația proiectului bazat pe toate fișierele.</p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/docs-update</code></pre>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Revizuiește toate fișierele din proiect</div>
+            <div class="step">2. Înțelege ce face fiecare fișier</div>
+            <div class="step">3. Actualizează/creează documentația în folderul docs/</div>
+            <div class="step">4. Creează documentație pentru comenzi noi dacă e necesar</div>
+        </section>
+
+        <section>
+            <h2><span class="command">/instructions</span></h2>
+            <p>Afișează instrucțiunile pentru AI - fluxuri de lucru, reguli, și convenții.</p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/instructions</code></pre>
+            
+            <h3>Conținut:</h3>
+            <ul>
+                <li>Fluxul de lucru pentru scraping (INSTRUCTIONS.md)</li>
+                <li>Schema de date pentru Job și Company (SCHEMAS.md)</li>
+                <li>Convenții de cod (AGENTS.md)</li>
+                <li>Formatul corect pentru Solr delete-by-query</li>
+            </ul>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Citește INSTRUCTIONS.md pentru fluxul de lucru curent</div>
+            <div class="step">2. Verifică regulile pentru fields (ex: nu include description în Job model)</div>
+            <div class="step">3. Aplică convențiile de cod din AGENTS.md</div>
+            <div class="step">4. Urmează pașii din INSTRUCTIONS.md pentru task-ul curent</div>
+        </section>
+
+        <section>
+            <h2><span class="command">/remove-404</span></h2>
+            <p>Validează URL-urile job-urilor care nu au fost verificate azi (vdate nu este setat sau vdate este anterior datei de azi). Pentru fiecare URL:
+            <ul>
+                <li>Dacă returnează 404: șterge job-ul din Solr</li>
+                <li>Dacă este valid: actualizează câmpul vdate cu data de azi</li>
+            </ul>
+            </p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/remove-404</code></pre>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Verifică că Solr rulează: <code>curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/admin/ping"</code></div>
+            <div class="step">2. Obține data de azi în format ISO (YYYY-MM-DD): <code>date -u +"%Y-%m-%dT00:00:00Z"</code></div>
+            <div class="step">3. Interoghează maxim 20 job-uri unde vdate NU este setat SAU vdate este anterior datei de azi</div>
+            <div class="step">4. Pentru fiecare URL:</div>
+            <div class="step" style="margin-left: 1rem;">a. Verifică dacă URL-ul returnează 404</div>
+            <div class="step" style="margin-left: 1rem;">b. Dacă 404: șterge job-ul din Solr</div>
+            <div class="step" style="margin-left: 1rem;">c. Dacă 200 (valid): actualizează vdate cu data de azi</div>
+            <div class="step">5. Raportează rezultatele: "Validated X URLs: Y valid (updated vdate), Z removed (404)"</div>
+            
+            <h3>Exemplu API - Interogare jobs pentru verificare:</h3>
+            <pre><code>curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=(*:*+NOT+vdate:*)++OR++vdate:[*+TO+2026-02-18T23:59:59Z]&rows=20&fl=url,vdate"</code></pre>
+            
+            <h3>Exemplu API - Verificare 404:</h3>
+            <pre><code>curl -s -o /dev/null -w "%{http_code}" "https://example.com/job"</code></pre>
+            
+            <h3>Exemplu API - Actualizare vdate (URL valid):</h3>
+            <pre><code>curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+  'http://localhost:8983/solr/job/update?commit=true' \
+  -d '[{"url":"https://example.com/job","vdate":"2026-02-19T00:00:00Z"}]'</code></pre>
+            
+            <h3>Verificare cu Chrome (pentru "not available"):</h3>
+            <ul>
+                <li>Folosește Chrome DevTools MCP doar dacă curl returnează 200 dar trebuie verificat conținutul paginii</li>
+                <li>Deschide pagina în Chrome folosind MCP</li>
+                <li>Folosește chrome-devtools_take_snapshot pentru a获取 conținutul paginii</li>
+                <li>Caută mesaje precum: "not available", "no longer available", "expired", "closed", "this job is not active"</li>
+            </ul>
+            
+            <h3>Exemplu API - Ștergere (URL 404):</h3>
+            <pre><code>curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+  'http://localhost:8983/solr/job/update?commit=true' \
+  -d '{"delete":{"query":"url:\"https://example.com/job\""}}'</code></pre>
+            
+            <div class="note">
+                <strong>Important:</strong>
+                <ul>
+                    <li>Limitează la 20 URL-uri per execuție pentru a evita timeout-urile</li>
+                    <li>Câmpul vdate stochează data ultimei verificări (format ISO8601)</li>
+                    <li>URL-urile verificate azi vor fi ignorate în următoarea execuție</li>
+                    <li>NU folosi formatul <code>"_delete_":true</code> - folosește întotdeauna formatul delete-by-query</li>
+                    <li>Când status="tested", setat și expirationdate = vdate + 30 zile</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="command">/clean-project</span></h2>
+            <p>Curăță proiectul prin ștergerea fișierelor temporare și actualizarea documentației.</p>
+            
+            <h3>Utilizare:</h3>
+            <pre><code>/clean-project</code></pre>
+            
+            <h3>Pași:</h3>
+            <div class="step">1. Șterge fișierele temporare PowerShell (*.ps1 care nu sunt necesare)</div>
+            <div class="step">2. Șterge fișierele JSON temporare (*_jobs.json)</div>
+            <div class="step">3. Șterge node_modules și rezultatele testelor (pot fi recreate)</div>
+            <div class="step">4. Actualizează documentația HTML în folderul docs/</div>
+            <div class="step">5. Verifică și șterge foldere goale</div>
+            
+            <h3>Fișiere șterse:</h3>
+            <ul>
+                <li>push_levi9.ps1, process_ddroidd.ps1, scripts/</li>
+                <li>levi9_jobs.json, artsoft_jobs.json, yardi_jobs.json</li>
+                <li>tests/node_modules/, tests/package-lock.json</li>
+                <li>.opencode/node_modules/, .opencode/bun.lock</li>
+            </ul>
+            
+            <h3>Fișiere păstrate:</h3>
+            <ul>
+                <li>start-chrome.ps1 (necesar)</li>
+                <li>webscraper/ (prompts companii)</li>
+                <li>docs/ (documentație)</li>
+                <li>tests/*.test.ts (surse teste)</li>
+                <li>.opencode/commands/*.md (comenzi)</li>
+            </ul>
+            
+            <h3>Pentru a restaura node_modules:</h3>
+            <pre><code>cd tests && npm install</code></pre>
+        </section>
+
+        <section>
+            <h2>Cum Funcționează</h2>
+            <p>Comenzile sunt definite în fișiere Markdown în <code>.opencode/commands/</code>. Fiecare fișier conține:</p>
+            <ul>
+                <li>Descrierea comenzii</li>
+                <li>Agentul care va executa comanda</li>
+                <li>Pașii detaliați de executat</li>
+            </ul>
+            
+            <h3>Exemplu - scrape.md:</h3>
+            <pre><code>---
+description: Run scraper for a company
+agent: build
+---
+
+Run the peviitor scraper for the company specified in $ARGUMENTS.
+
+Steps:
+1. First, check if the company exists in websites.md
+2. If found, use the careers page URL to scrape jobs
+3. Format the data according to the Job model schema
+4. Push the data to Solr using the job core</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <p>📅 Ultima actualizare: Feb 2026</p>
+    </footer>
+</body>
+</html>

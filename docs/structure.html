@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structura Proiectului - Peviitor OpenCode AI Scrapers</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center; }
+        header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        nav { background: #2c3e50; padding: 1rem; position: sticky; top: 0; z-index: 100; }
+        nav ul { list-style: none; display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; }
+        nav a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; }
+        nav a:hover { background: #34495e; }
+        nav a.active { background: #667eea; }
+        main { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        section { background: white; border-radius: 8px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        h3 { color: #34495e; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        code { background: #f4f4f4; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; }
+        pre { background: #282c34; color: #abb2bf; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
+        pre code { background: none; padding: 0; color: inherit; }
+        .folder-tree { background: #f9f9f9; padding: 1rem; border-radius: 6px; font-family: monospace; white-space: pre; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f4f4f4; }
+        tr:hover { background: #f9f9f9; }
+        .folder { color: #667eea; font-weight: bold; }
+        .file { color: #27ae60; }
+        .ps1 { color: #e74c3c; }
+        .md { color: #3498db; }
+        .json { color: #f39c12; }
+        .gitignore { color: #9b59b6; }
+        footer { background: #2c3e50; color: white; text-align: center; padding: 2rem; margin-top: 3rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📁 Structura Proiectului</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Acasă</a></li>
+            <li><a href="structure.html" class="active">Structura Proiectului</a></li>
+            <li><a href="commands.html">Comenzi</a></li>
+            <li><a href="tests.html">Teste</a></li>
+            <li><a href="schemas.html">Schema Date</a></li>
+            <li><a href="setup.html">Setup</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Arbore Foldere</h2>
+            <pre class="folder-tree"><span class="folder">peviitor_opencode_AI_scrapers/</span>
+├── <span class="folder">docs/</span>                  # Documentație HTML
+│   ├── index.html
+│   ├── structure.html
+│   ├── commands.html
+│   ├── tests.html
+│   ├── schemas.html
+│   ├── setup.html
+│   └── <span class="folder">commands/</span>          # Documentație comenzi
+├── <span class="folder">.opencode/</span>              # Configurare OpenCode
+│   ├── <span class="folder">commands/</span>             # Comenzi personalizate
+│   │   ├── <span class="md">scrape.md</span>
+│   │   ├── <span class="md">update-solr.md</span>
+│   │   ├── <span class="md">delete-solr.md</span>
+│   │   ├── <span class="md">login-solr.md</span>
+│   │   ├── <span class="md">add-website.md</span>
+│   │   ├── <span class="md">docs-update.md</span>
+│   │   ├── <span class="md">instructions.md</span>
+│   │   ├── <span class="md">remove-404.md</span>
+│   │   └── <span class="md">clean-project.md</span>
+│   └── package.json
+├── <span class="folder">webscraper/</span>             # Prompt-uri scraping per companie
+│   ├── <span class="md">websites.md</span>            # Lista companii + scraper files
+│   ├── <span class="md">epam.md</span>               # Prompt scraping EPAM
+│   ├── <span class="md">endava.md</span>             # Prompt scraping ENDAVA
+│   ├── <span class="md">bento.md</span>              # Prompt scraping BENTO
+│   ├── <span class="md">genpact.md</span>            # Prompt scraping GENPACT
+│   ├── <span class="md">orange.md</span>              # Prompt scraping ORANGE
+│   ├── <span class="md">farmec.md</span>              # Prompt scraping FARMEC
+│   ├── <span class="md">vodafone.md</span>            # Prompt scraping VODAFONE
+│   ├── <span class="md">ntt-data.md</span>            # Prompt scraping NTT DATA
+│   ├── <span class="md">eurodealer.md</span>          # Prompt scraping EURODEALER
+│   ├── <span class="md">ddroidd.md</span>            # Prompt scraping DDROIDD
+│   └── <span class="md">coera.md</span>              # Prompt scraping COERA
+├── <span class="folder">tests/</span>                   # Teste Playwright
+│   ├── *.test.ts
+│   ├── README.md
+│   ├── package.json
+│   └── playwright.config.ts
+├── <span class="ps1">start-chrome.ps1</span>          # Script pornire Chrome
+├── <span class="md">AGENTS.md</span>                 # Documentație pentru AI
+├── <span class="md">SCHEMAS.md</span>                # Schema date (Job, Company)
+├── <span class="md">INSTRUCTIONS.md</span>          # Instrucțiuni pentru AI
+└── <span class="json">opencode.json</span>            # Configurare OpenCode</pre>
+        </section>
+
+        <section>
+            <h2>Descriere Foldere și Fișiere</h2>
+            
+            <table>
+                <tr>
+                    <th>Fișier/Folder</th>
+                    <th>Descriere</th>
+                </tr>
+                <tr>
+                    <td><code>docs/</code></td>
+                    <td>Documentație HTML pentru înțelegerea proiectului. Include toate informațiile necesare pentru un nou membru.</td>
+                </tr>
+                <tr>
+                    <td><code>docs/commands/</code></td>
+                    <td>Documentație detaliată pentru fiecare comandă OpenCode.</td>
+                </tr>
+                <tr>
+                    <td><code>.opencode/</code></td>
+                    <td>Configurări și comenzi pentru OpenCode AI. Aici sunt definite automatizările.</td>
+                </tr>
+                <tr>
+                    <td><code>.opencode/commands/</code></td>
+                    <td>Comenzi personalizate: <code>/scrape</code>, <code>/update-solr</code>, <code>/login-solr</code>, <code>/delete-solr</code>, <code>/add-website</code>, <code>/docs-update</code>, <code>/instructions</code>, <code>/remove-404</code>, <code>/clean-project</code></td>
+                </tr>
+                <tr>
+                    <td><code>webscraper/</code></td>
+                    <td>Prompt-uri de scraping specifice per companie. Conține fișiere .md pentru EPAM, ENDAVA, BENTO, GENPACT, ORANGE, FARMEC, VODAFONE, NTT DATA, EURODEALER, DDROIDD, COERA.</td>
+                </tr>
+                <tr>
+                    <td><code>webscraper/websites.md</code></td>
+                    <td>Lista companiilor cu Brand, CUI, Careers URL, și Scraper File asociat.</td>
+                </tr>
+                <tr>
+                    <td><code>tests/</code></td>
+                    <td>Teste Playwright pentru validarea fluxurilor de lucru. Include: <code>login-solr.test.ts</code>, <code>update-solr.test.ts</code>, <code>delete-solr.test.ts</code></td>
+                </tr>
+                <tr>
+                    <td><code>start-chrome.ps1</code></td>
+                    <td>Script PowerShell pentru pornirea Chrome cu debugging (necesar pentru MCP Chrome DevTools)</td>
+                </tr>
+                <tr>
+                    <td><code>AGENTS.md</code></td>
+                    <td>Documentație pentru agenții AI - convenții, comenzi, stil cod</td>
+                </tr>
+                <tr>
+                    <td><code>SCHEMAS.md</code></td>
+                    <td>Definite schemele de date pentru Job și Company - câmpuri, tipuri, reguli</td>
+                </tr>
+                <tr>
+                    <td><code>INSTRUCTIONS.md</code></td>
+                    <td>Instrucțiuni pentru AI - fluxuri de lucru, comenzi, reguli</td>
+                </tr>
+                <tr>
+                    <td><code>opencode.json</code></td>
+                    <td>Configurare principală OpenCode - MCP servers, context files</td>
+                </tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>Note</h2>
+            <ul>
+                <li><strong>node_modules/</strong> - Folder generat automat. Pentru a restaura: <code>cd tests && npm install</code>. Nu trebuie inclus în git.</li>
+                <li>Fișierele <code>.md</code> din <code>webscraper/</code> conțin instrucțiuni de scraping specifice per companie, incluzând extragerea tag-urilor.</li>
+                <li>Fișierele temporare (*_jobs.json, *.ps1 nefolosiți) pot fi șterse cu comanda <code>/clean-project</code>.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Fluxul de Date</h2>
+            <pre><code>websites.md (companii)
+    ↓
+/scrape (comandă OpenCode)
+    ↓
+Chrome DevTools (scraping)
+    ↓
+Date → Job Schema
+    ↓
+Solr (stocare)
+    ↓
+Teste Playwright (validare)</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <p>📅 Ultima actualizare: Feb 2026</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peviitor OpenCode AI Scrapers - Documentație</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        nav {
+            background: #2c3e50;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        nav a:hover {
+            background: #34495e;
+        }
+        nav a.active {
+            background: #667eea;
+        }
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        h3 {
+            color: #34495e;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        .folder-tree {
+            background: #f9f9f9;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f4f4f4;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .status-ok {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .card {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        .card h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📋 Peviitor OpenCode AI Scrapers</h1>
+        <p>Documentație completă pentru proiectul de automatizare scraping job-uri de pe peviitor.ro</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html" class="active">Acasă</a></li>
+            <li><a href="structure.html">Structura Proiectului</a></li>
+            <li><a href="commands.html">Comenzi</a></li>
+            <li><a href="tests.html">Teste</a></li>
+            <li><a href="schemas.html">Schema Date</a></li>
+            <li><a href="setup.html">Setup</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Bine ai venit! 👋</h2>
+            <p>Acest proiect conține instrumente de automatizare pentru colectarea și actualizarea datelor despre locuri de muncă de pe platforma <strong>peviitor.ro</strong>.</p>
+            
+            <div class="alert alert-info">
+                <strong>Scop:</strong> Utilizăm AI (OpenCode) pentru a automatiza procesul de scraping al job-urilor de pe site-urile companiilor și actualizarea acestora în Solr.
+            </div>
+        </section>
+
+        <section>
+            <h2>🎯 Obiective</h2>
+            <p>Construim un sistem automatizat de colectare a job-urilor pentru companiile IT din România:</p>
+            
+            <div class="card-grid">
+                <div class="card">
+                    <h4>1. Scraping Job-uri</h4>
+                    <p>Extragem automat locurile de muncă de pe paginile de cariere ale companiilor.</p>
+                </div>
+                <div class="card">
+                    <h4>2. Extragere Tag-uri</h4>
+                    <p>Identificăm automat nivelul de senioritate (junior/mid/senior/consultant) și domeniul (IT/Data Science/Cloud/Finance/etc.).</p>
+                </div>
+                <div class="card">
+                    <h4>3. Indexare Solr</h4>
+                    <p>Încărcăm datele structurate în Apache Solr pentru căutare și filtrare rapidă.</p>
+                </div>
+                <div class="card">
+                    <h4>4. Prompts Reutilizabile</h4>
+                    <p>Creăm fișiere de prompt specifice pentru fiecare companie, reutilizabile pentru actualizări periodice.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Ce face acest proiect?</h2>
+            
+            <div class="card-grid">
+                <div class="card">
+                    <h4>🤖 Automatizare Browser</h4>
+                    <p>Controlăm Chrome prin DevTools Protocol pentru a naviga pe site-uri și a extrage date despre job-uri.</p>
+                </div>
+                <div class="card">
+                    <h4>🔍 Scraping Inteligent</h4>
+                    <p>AI-ul analizează structura site-urilor companiilor pentru a găsi paginile de cariere și a extrage informațiile corecte.</p>
+                </div>
+                <div class="card">
+                    <h4>💾 Stocare Date</h4>
+                    <p>Datele sunt trimise către Apache Solr pentru indexare și căutare rapidă.</p>
+                </div>
+                <div class="card">
+                    <h4>✅ Testare Automată</h4>
+                    <p>Testele Playwright verifică că fluxurile de lucru funcționează corect.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Fluxul de Lucru</h2>
+            
+            <pre><code>1. Găsește compania în websites.md
+         ↓
+2. Rulează comanda /scrape [nume_companie]
+         ↓
+3. AI-ul deschide Chrome și navighează pe site
+         ↓
+4. Extrage job-urile conform Job Schema
+         ↓
+5. Trimite datele către Solr
+         ↓
+6. Verifică cu testele Playwright</code></pre>
+        </section>
+
+        <section>
+            <h2>💻 Soluție 100% Locală - Cost 0 Lei</h2>
+            <p>Acest proiect folosește <strong>AI local</strong> (Big Pickle) pentru coding asistat, fără să plătești nimic pentru API-uri externe.</p>
+            
+            <div class="alert alert-info">
+                <strong>Cum funcționează fără costuri?</strong>
+                <ul>
+                    <li><strong>AI Big Pickle</strong> - rulează local pe calculatorul tău</li>
+                    <li><strong>Apache Solr</strong> - în Docker container local</li>
+                    <li><strong>Chrome DevTools</strong> - pentru automatizare browser</li>
+                    <li><strong>OpenCode</strong> - CLI gratuit pentru AI coding</li>
+                </ul>
+            </div>
+
+            <div class="alert">
+                <strong>Cerințe Hardware:</strong>
+                <ul>
+                    <li><strong>RAM: 16 GB minim</strong> (32 GB recomandat)</li>
+                    <li><strong>CPU: 4+ core-uri</strong> (8+ recomandat)</li>
+                    <li><strong>Stocare: 50 GB liberi</strong> (100 GB SSD recomandat)</li>
+                    <li>Vezi <a href="setup.html">detalii complete</a></li>
+                </ul>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>🔒 Confidențialitate:</strong>
+                <ul>
+                    <li>Toate datele rămân pe calculatorul tău</li>
+                    <li>AI-ul NU trimite date în cloud</li>
+                    <li>Solr rulează doar pe localhost</li>
+                    <li>Zero costuri - zero dependență de servicii externe</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Link-uri Rapide</h2>
+            
+            <table>
+                <tr>
+                    <th>Documentație</th>
+                    <th>Descriere</th>
+                </tr>
+                <tr>
+                    <td><a href="structure.html">Structura Proiectului</a></td>
+                    <td>Explorarea folderelor și fișierelor</td>
+                </tr>
+                <tr>
+                    <td><a href="commands.html">Comenzi Personalizate</a></td>
+                    <td>Comenziile /scrape, /update-solr, /login-solr</td>
+                </tr>
+                <tr>
+                    <td><a href="tests.html">Testare</a></td>
+                    <td>Cum rulează testele Playwright</td>
+                </tr>
+                <tr>
+                    <td><a href="schemas.html">Schema Date</a></td>
+                    <td>Modelele Job și Company</td>
+                </tr>
+                <tr>
+                    <td><a href="setup.html">Setup</a></td>
+                    <td>Ghid de instalare și configurare</td>
+                </tr>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>📅 Ultima actualizare: Feb 2026</p>
+        <p>Pentru întrebări, consultă documentația sau contactează echipa.</p>
+    </footer>
+</body>
+</html>
