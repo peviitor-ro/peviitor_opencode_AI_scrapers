@@ -122,21 +122,46 @@
 
         <section>
             <h2><span class="command">/update-solr</span></h2>
-            <p>Actualizează indexul Solr cu date noi.</p>
+            <p>Actualizează indexul Solr cu date noi (job sau company).</p>
             
             <h3>Utilizare:</h3>
             <pre><code>/update-solr</code></pre>
             
             <h3>Pași:</h3>
-            <div class="step">1. Verifică dacă Solr rulează: <code>curl http://localhost:8983/solr/</code></div>
+            <div class="step">1. Verifică dacă Solr rulează: <code>curl -s http://localhost:8983/solr/admin/ping</code></div>
             <div class="step">2. Dacă nu rulează, pornește containerul: <code>docker start peviitor-solr</code></div>
-            <div class="step">3. Adaugă/actualizează documente în Solr folosind API-ul</div>
-            <div class="step">4. Verifică că actualizarea a fost făcută cu succes</div>
+            <div class="step">3. Formatează datele conform Job/Company schema (vezi SCHEMAS.md)</div>
+            <div class="step">4. Trimite către Solr folosind curl cu credențiale</div>
+            <div class="step">5. Verifică că actualizarea a fost făcută cu succes</div>
             
-            <h3>Exemplu API:</h3>
+            <h3>Core-uri disponibile:</h3>
+            <ul>
+                <li><code>/solr/job/update</code> - pentru job-uri</li>
+                <li><code>/solr/company/update</code> - pentru companii</li>
+            </ul>
+            
+            <h3>Exemplu API - Adaugă job-uri:</h3>
             <pre><code>curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
   'http://localhost:8983/solr/job/update?commit=true' \
-  -d '[{"url":"https://example.com/job","title":"Software Engineer","company":"Example"}]'</code></pre>
+  -d '[{"url":"https://example.com/job","title":"Software Engineer","company":"Example SRL","status":"scraped","date":"2026-02-19T00:00:00Z"}]'</code></pre>
+            
+            <h3>Exemplu API - Adaugă companii:</h3>
+            <pre><code>curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+  'http://localhost:8983/solr/company/update?commit=true' \
+  -d '[{"id":"12345678","company":"Example SRL","status":"activ","website":["https://example.com"],"career":["https://example.com/careers"]}]'</code></pre>
+            
+            <h3>Verificare:</h3>
+            <pre><code>curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=company:Example%20SRL"</code></pre>
+            
+            <div class="note">
+                <strong>Important:</strong>
+                <ul>
+                    <li>Folosește întotdeauna credențiale: <code>-u solr:SolrRocks</code></li>
+                    <li>NU include câmpul "description" - nu există în schema Job</li>
+                    <li>Follow Job/Company schema din SCHEMAS.md</li>
+                    <li>Tag-urile trebuie să fie lowercase, fără diacritice</li>
+                </ul>
+            </div>
         </section>
 
         <section>
@@ -261,7 +286,7 @@
             <h3>Pași:</h3>
             <div class="step">1. Verifică că Solr rulează: <code>curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/admin/ping"</code></div>
             <div class="step">2. Obține data de azi în format ISO (YYYY-MM-DD): <code>date -u +"%Y-%m-%dT00:00:00Z"</code></div>
-            <div class="step">3. Interoghează maxim 20 job-uri unde vdate NU este setat SAU vdate este anterior datei de azi</div>
+            <div class="step">3. Interoghează maxim 10 job-uri unde vdate NU este setat SAU vdate este anterior datei de azi</div>
             <div class="step">4. Pentru fiecare URL:</div>
             <div class="step" style="margin-left: 1rem;">a. Verifică dacă URL-ul returnează 404</div>
             <div class="step" style="margin-left: 1rem;">b. Dacă 404: șterge job-ul din Solr</div>
@@ -269,7 +294,7 @@
             <div class="step">5. Raportează rezultatele: "Validated X URLs: Y valid (updated vdate), Z removed (404)"</div>
             
             <h3>Exemplu API - Interogare jobs pentru verificare:</h3>
-            <pre><code>curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=(*:*+NOT+vdate:*)++OR++vdate:[*+TO+2026-02-18T23:59:59Z]&rows=20&fl=url,vdate"</code></pre>
+            <pre><code>curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=NOT+vdate:*&rows=10&fl=url,vdate"</code></pre>
             
             <h3>Exemplu API - Verificare 404:</h3>
             <pre><code>curl -s -o /dev/null -w "%{http_code}" "https://example.com/job"</code></pre>
@@ -295,7 +320,7 @@
             <div class="note">
                 <strong>Important:</strong>
                 <ul>
-                    <li>Limitează la 20 URL-uri per execuție pentru a evita timeout-urile</li>
+                    <li>Limitează la 10 URL-uri per execuție pentru a evita timeout-urile</li>
                     <li>Câmpul vdate stochează data ultimei verificări (format ISO8601)</li>
                     <li>URL-urile verificate azi vor fi ignorate în următoarea execuție</li>
                     <li>NU folosi formatul <code>"_delete_":true</code> - folosește întotdeauna formatul delete-by-query</li>
