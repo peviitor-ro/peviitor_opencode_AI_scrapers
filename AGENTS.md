@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a local development automation project for scraping job data from peviitor.ro platform. It contains:
+This is a local development automation project for scraping job data from peviitor.ro platform, developed by **Asociația Opportunități și Cariere** (NGO). It contains:
 - PowerShell scripts for browser automation (Chrome DevTools)
 - Playwright tests for validating commands
 - Markdown documentation files
@@ -19,9 +19,12 @@ peviitor_opencode_AI_scrapers/
 ├── SCHEMAS.md             # Data schemas (Job, Company models)
 ├── AGENTS.md              # Agent instructions and guidelines
 ├── INSTRUCTIONS.md        # Project instructions
-
-├── scripts/               # PowerShell automation scripts
-│   └── *.ps1
+├── LICENSE                # MIT License
+├── CONTRIBUTING.md       # Contribution guidelines
+├── CODE_OF_CONDUCT.md    # Community code of conduct
+├── SECURITY.md           # Security policy
+├── README.md             # Project README
+├── .github/              # GitHub templates
 ├── webscraper/            # Web scraping data
 │   ├── websites.md        # Companies and their careers pages
 │   ├── *.md               # Company-specific scraping prompts

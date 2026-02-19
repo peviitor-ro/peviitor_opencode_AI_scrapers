@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please send an email to contact@peviitor.ro
+If you discover a security vulnerability, please send an email to aocpeviitor@gmail.com
 
 Please include:
 - Description of the vulnerability

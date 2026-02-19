@@ -3,7 +3,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-Automation project for scraping job data from peviitor.ro platform using OpenCode AI agents.
+Automation project for scraping job data from [peviitor.ro](https://peviitor.ro) platform using OpenCode AI agents.
+
+## About
+
+This project is developed and maintained by **Asociația Opportunități și Cariere** - a Romanian NGO dedicated to simplifying the job search process in Romania.
+
+Our mission is to help people find jobs from hundreds of companies through our free platform [peviitor.ro](https://peviitor.ro).
 
 ## Features
 

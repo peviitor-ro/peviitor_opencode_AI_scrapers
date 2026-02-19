@@ -57,3 +57,8 @@ npx playwright test
 ## Questions?
 
 Open an issue for questions about contributing.
+
+## Contact
+
+- Email: aocpeviitor@gmail.com
+- Website: https://oportunitatisicariere.ro
