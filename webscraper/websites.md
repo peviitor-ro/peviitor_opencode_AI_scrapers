@@ -60,3 +60,4 @@
 | STEFANINI | STEFANINI ROMANIA SRL | - | https://www.stefanini.com | https://jobs2.smartsearchonline.com/stefaniniEMEA/jobs/ | 16139707 | 2026-02-18 | stefanini.md |
 | WAYFARE | WAYFARE SRL | - | https://www.wayfare.ro | https://www.wayfare.ro/careers | 30555941 | 2026-02-18 | wayfare.md |
 | WOLTERS KLUWER | WOLTERS KLUWER ROMANIA SRL | - | https://www.wolterskluwer.com | https://careers.wolterskluwer.com/en | 8451308 | 2026-02-18 | wolters-kluwer.md |
+| SECPRAL PRO INSTALATII | SECPRAL PRO INSTALATII SRL | - | https://www.secpralpro.ro | https://spishop.ro/ro/content/12-cariere | 10166281 | 2026-02-19 (2 jobs) | - |
