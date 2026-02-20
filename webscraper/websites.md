@@ -6,10 +6,10 @@
 
 | Brand | Company | Group | Website | Careers Page | CUI | Last Scraped | Scraper File |
 |-------|---------|-------|---------|--------------|-----|--------------|--------------|
-| ORANGE | ORANGE ROMANIA SA | Orange Group | https://www.orange.ro | https://cariere.orange.ro/ | 9010105 | 2026-02-18 (29 jobs) | orange.md |
-| FARMEC | FARMEC SA | Henkel | https://www.farmec.ro | https://www.farmec.ro/compania/cariere/ | 199150 | 2026-02-18 (5 jobs) | farmec.md |
-| EPAM | EPAM SYSTEMS INTERNATIONAL SRL | EPAM Systems | https://www.epam.com | https://www.epam.com/careers/locations/romania | 33159615 | 2026-02-18 (88 jobs) | epam.md |
-| ENDAVA | ENDAVA ROMANIA SRL | Endava plc | https://www.endava.com | https://www.endava.com/careers | 9533457 | 2026-02-18 (161 jobs) | endava.md |
+| ORANGE | ORANGE ROMANIA SA | Orange Group | https://www.orange.ro | https://cariere.orange.ro/ | 9010105 | 2026-02-20 (45 jobs) | orange.md |
+| FARMEC | FARMEC SA | Henkel | https://www.farmec.ro | https://www.farmec.ro/compania/cariere/ | 199150 | 2026-02-20 (5 jobs) | farmec.md |
+| EPAM | EPAM SYSTEMS INTERNATIONAL SRL | EPAM Systems | https://www.epam.com | https://www.epam.com/careers/locations/romania | 33159615 | 2026-02-20 (30 jobs) | epam.md |
+| ENDAVA | ENDAVA ROMANIA SRL | Endava plc | https://www.endava.com | https://www.endava.com/careers | 9533457 | 2026-02-20 (18 jobs) | endava.md |
 | BENTO | 2B INTELLIGENT SOFT S.A. | - | https://www.bento.ro | https://www.bento.ro/en/careers/ | 16558004 | 2026-02-18 (3 jobs) | bento.md |
 | GENPACT | GENPACT ROMANIA SRL | Genpact | https://www.genpact.com | https://www.genpact.com/careers | 17362595 | 2026-02-18 (35 jobs) | genpact.md |
 | NTT DATA | NTT DATA ROMANIA SA | NTT DATA | https://ro.nttdata.com/ | https://careers.nttdata.ro/ | 13091574 | 2026-02-18 (89 jobs) | ntt-data.md |
