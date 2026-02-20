@@ -70,7 +70,7 @@
 
         <section>
             <h2>Cerințe Hardware</h2>
-            <p>Aceasta este o soluție <strong>100% locală</strong> care folosește AI local (Big Pickle) fără costuri externe. Docker cu Solr și AI local necesită resurse hardware dedicate.</p>
+            <p>Aceasta este o soluție <strong>hibridă cloud + local</strong> - AI-ul rulează în cloud OpenCode, serviciile locale (Chrome, Solr) necesită resurse hardware dedicate.</p>
             
             <table class="specs-table">
                 <tr>
@@ -80,23 +80,23 @@
                 </tr>
                 <tr>
                     <td><strong>RAM</strong></td>
-                    <td class="spec-min">16 GB</td>
-                    <td class="spec-rec">32 GB</td>
+                    <td class="spec-min">8 GB</td>
+                    <td class="spec-rec">16 GB</td>
                 </tr>
                 <tr>
                     <td><strong>CPU</strong></td>
-                    <td class="spec-min">4 core</td>
-                    <td class="spec-rec">8+ core</td>
+                    <td class="spec-min">2 core</td>
+                    <td class="spec-rec">4+ core</td>
                 </tr>
                 <tr>
-                    <td><strong>Stocare (HDD)</strong></td>
-                    <td class="spec-min">50 GB liberi</td>
-                    <td class="spec-rec">100 GB SSD</td>
+                    <td><strong>Stocare</strong></td>
+                    <td class="spec-min">20 GB liberi</td>
+                    <td class="spec-rec">50 GB SSD</td>
                 </tr>
                 <tr>
-                    <td><strong>Model AI Local</strong></td>
-                    <td class="spec-min">~8 GB</td>
-                    <td class="spec-rec">~15 GB</td>
+                    <td><strong>AI (Cloud)</strong></td>
+                    <td class="spec-min">-</td>
+                    <td class="spec-rec">-</td>
                 </tr>
             </table>
 
@@ -104,18 +104,17 @@
             
             <div class="step"><strong>RAM (Memorie):</strong></div>
             <ul>
-                <li>Docker + Solr: <strong>2-4 GB</strong> RAM alocat</li>
-                <li>Chrome cu debugging: <strong>1-2 GB</strong> RAM</li>
-                <li>OpenCode + AI Big Pickle: <strong>8-16 GB</strong> RAM</li>
-                <li>Sistem de operare + alte aplicații: <strong>4 GB</strong> RAM</li>
+                <li>Docker + Solr: <strong>~2 GB</strong> RAM</li>
+                <li>Chrome cu debugging: <strong>~1 GB</strong> RAM</li>
+                <li>AI Big Pickle: <strong>rulează în cloud OpenCode</strong> (nu consumă RAM local)</li>
+                <li>Sistem de operare: <strong>~2 GB</strong> RAM</li>
             </ul>
-            <p><strong>Total minim: 16 GB RAM</strong> - fără aceasta, sistemul va fi extrem de lent sau nu va funcționa.</p>
+            <p><strong>Total minim: 8 GB RAM</strong> (16 GB recomandat pentru performanță optimă)</p>
 
             <div class="step"><strong>CPU:</strong></div>
             <ul>
-                <li>Minim 4 core-uri pentru rulare decentă</li>
-                <li>8+ core-uri pentru performanță optimă</li>
-                <li>Procesoare moderne (Intel i5/i7/i9 sau AMD Ryzen 5/7/9)</li>
+                <li>Minim 2 core-uri pentru rulare de bază</li>
+                <li>4+ core-uri pentru performanță optimă</li>
             </ul>
 
             <div class="step"><strong>Stocare:</strong></div>
@@ -123,59 +122,57 @@
                 <li><strong>Docker Desktop</strong>: ~5 GB</li>
                 <li><strong>Solr container</strong>: ~2 GB (plus date)</li>
                 <li><strong>Chrome</strong>: ~500 MB</li>
-                <li><strong>OpenCode + AI Big Pickle</strong>: ~15 GB</li>
+                <li><strong>OpenCode CLI</strong>: ~500 MB</li>
                 <li><strong>Node.js + dependențe</strong>: ~2 GB</li>
                 <li><strong>Spațiu liber pentru date</strong>: 20+ GB</li>
             </ul>
-            <p><strong>Recomandare: SSD de 100 GB</strong> - îmbunătățește semnificativ performanța Docker și AI.</p>
+            <p><strong>Recomandare: SSD</strong> - îmbunătățește performanța Docker.</p>
 
             <div class="danger">
-                <strong>⚠️ ATENȚIE: Dacă ai mai puțin de 16 GB RAM, proiectul NU va funcționa corespunzător!</strong>
+                <strong>⚠️ ATENȚIE: Ai nevoie de minim 8 GB RAM!</strong>
                 <ul>
-                    <li>AI-ul local Big Pickle necesită minim 8 GB RAM</li>
-                    <li>Docker cu Solr necesită 2-4 GB RAM</li>
-                    <li>Chrome necesită 1-2 GB RAM</li>
+                    <li>Chrome + Docker au nevoie de ~3-4 GB RAM</li>
+                    <li>Sistemul de operare necesită ~2 GB RAM</li>
+                    <li>Cu 8 GB RAM totul va funcționa OK</li>
                 </ul>
             </div>
         </section>
 
         <section>
             <h2>Confidențialitate și Securitate</h2>
-            <p>Acest proiect este conceput pentru a fi <strong>100% local</strong> - toate datele rămân pe computerul tău.</p>
+            <p>Acest proiect folosește o <strong>arhitectură hibridă</strong> - AI în cloud, date local.</p>
 
             <div class="success">
-                <strong>✅ Ce rămâne LOCAL pe calculatorul tău:</strong>
+                <strong>✅ Ce rulează LOCAL pe calculatorul tău:</strong>
                 <ul>
-                    <li><strong>AI Big Pickle</strong> - rulează local, nu trimite date în cloud</li>
+                    <li><strong>Chrome</strong> - cu remote debugging pentru scraping</li>
                     <li><strong>Date de scraping</strong> - job-urile sunt stocate local în Solr</li>
                     <li><strong>Credențiale Solr</strong> - nu sunt trimise nicăieri</li>
-                    <li><strong>Istoric navigare</strong> - totul rămâne în Chrome local</li>
+                    <li><strong>Istoric navigare</strong> - rămâne în Chrome local</li>
                 </ul>
             </div>
 
             <div class="step"><strong>Când folosești OpenCode cu Big Pickle:</strong></div>
             <ul>
-                <li>Modelul AI rulează <strong>EXCLUSIV</strong> pe calculatorul tău</li>
-                <li><strong>NICIUN</strong> date nu este trimis către servere externe</li>
-                <li><strong>NICIUN</strong> cod sau date nu este procesat în cloud</li>
-                <li>Totul se întâmplă în memoria RAM a calculatorului tău</li>
+                <li>Modelul AI rulează în <strong>cloud-ul OpenCode</strong> (opencode.ai)</li>
+                <li>Comenzile sunt trimise de la AI cloud către Chrome local via MCP</li>
+                <li>Solr comunică direct cu calculatorul tău (localhost)</li>
             </ul>
 
-            <div class="step"><strong>Ce necesită internet (dar rămâne privat):</strong></div>
+            <div class="step"><strong>Ce necesită internet:</strong></div>
             <ul>
+                <li>AI-ul procesează în cloud OpenCode</li>
                 <li>Accesarea site-urilor companiilor pentru scraping (în Chrome local)</li>
-                <li>Comunicarea cu Solr (doar pe localhost)</li>
                 <li>Download Docker imagini (de pe Docker Hub oficial)</li>
             </ul>
 
             <div class="danger">
-                <strong>🔒 Confidențialitate 100%:</strong>
-                <p>Poți verifica în orice moment că datele nu părăsesc calculatorul tău:</p>
+                <strong>🔒 Confidențialitate:</strong>
                 <ul>
-                    <li>Nu există API calls către servicii cloud pentru AI</li>
-                    <li>Nu există tracking sau analytics</li>
+                    <li>Datele de job-uri rămân în Solr local</li>
+                    <li>Navigarea web este locală în Chrome</li>
                     <li>Solr rulează doar pe localhost (port 8983)</li>
-                    <li>Chrome DevTools MCP comunică doar local</li>
+                    <li>Chrome DevTools MCP conectează cloud-ul la browser-ul local</li>
                 </ul>
             </div>
         </section>
