@@ -61,3 +61,5 @@
 | WAYFARE | WAYFARE SRL | - | https://www.wayfare.ro | https://www.wayfare.ro/careers | 30555941 | 2026-02-18 | wayfare.md |
 | WOLTERS KLUWER | WOLTERS KLUWER ROMANIA SRL | - | https://www.wolterskluwer.com | https://careers.wolterskluwer.com/en | 8451308 | 2026-02-18 | wolters-kluwer.md |
 | SECPRAL PRO INSTALATII | SECPRAL PRO INSTALATII SRL | - | https://www.secpralpro.ro | https://spishop.ro/ro/content/12-cariere | 10166281 | 2026-02-19 (2 jobs) | - |
+| COGNIZANT | COGNIZANT TECHNOLOGY SOLUTIONS ROMANIA SRL | Cognizant | https://www.cognizant.com | https://careers.cognizant.com/global-en/ | 10938454 | 2026-03-03 (No Romania jobs) | - |
+| ANTIBIOTICE | ANTIBIOTICE SA | - | https://www.antibiotice.ro | https://www.antibiotice.ro/cariere/open-position/ | 1973096 | 2026-03-03 (4 jobs) | - |
