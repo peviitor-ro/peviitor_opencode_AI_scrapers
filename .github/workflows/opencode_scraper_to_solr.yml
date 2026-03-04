@@ -1,0 +1,74 @@
+name: OpenCode Scraper to Solr
+
+on:
+  workflow_dispatch:
+    inputs:
+      company:
+        description: 'Company name to scrape'
+        required: true
+        default: 'EPAM'
+        type: string
+
+jobs:
+  scrape-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Chrome
+        run: |
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+          apt-get update
+          apt-get install -y google-chrome-stable
+
+      - name: Start Chrome with remote debugging
+        run: |
+          google-chrome --remote-debugging-port=9222 --headless --no-sandbox --disable-dev-shm-usage &
+          sleep 3
+
+      - name: Install OpenCode
+        run: |
+          npm install -g opencode-ai
+
+      - name: Copy opencode.json
+        run: |
+          cp opencode.json opencode.json.bak
+          cat > opencode.json << 'EOF'
+          {
+            "$schema": "https://opencode.ai/config.json",
+            "model": "opencode/big-pickle",
+            "mcp": {
+              "chrome-devtools": {
+                "type": "local",
+                "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--browser-url=http://127.0.0.1:9222"]
+              }
+            }
+          }
+          EOF
+
+      - name: Run OpenCode scrape command
+        env:
+          SOLR_USER: ${{ secrets.SOLR_USER }}
+          SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
+        run: |
+          set +x
+          opencode run "
+          You are running in GitHub Actions. You have access to Chrome DevTools MCP connected to Chrome on port 9222.
+
+          Security rules:
+          - Do NOT reveal SOLR_USER or SOLR_PASSWD values in any output.
+          - Use credentials for Solr operations only.
+
+          Task:
+          - Run the /scrape command with the company name: ${{ github.event.inputs.company }}
+          - The scrape command will navigate to the company's careers page, extract job data, and push to Solr.
+          - Only output the final result (number of jobs scraped and pushed).
+          "
