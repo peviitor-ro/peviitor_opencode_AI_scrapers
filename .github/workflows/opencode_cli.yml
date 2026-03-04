@@ -31,4 +31,4 @@ jobs:
       - name: Run OpenCode command
         run: opencode run "give me the current date"
       - name: Run OpenCode command
-        run: opencode run "learn about job model from github peviitor-ro peviitor_core and then print important fields on this model"
+        run: opencode run "using repo secrets get the credentials for solr, do not show them in any output and then show me first document from job core from solr runing at https://solr.peviitor.ro"
