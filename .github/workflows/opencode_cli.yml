@@ -17,7 +17,7 @@ jobs:
 
       - name: Install OpenCode
         run: |
-          npm install -g opencode
+          npm install -g opencode-ai
 
       - name: Create opencode.json
         run: |
