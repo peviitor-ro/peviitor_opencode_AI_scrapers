@@ -65,12 +65,19 @@ jobs:
           opencode run "
           You are running in GitHub Actions. You have access to Chrome DevTools MCP connected to Chrome on port 9222.
 
+          IMPORTANT - Solr Configuration:
+          - Use SOLR_USER and SOLR_PASSWD environment variables for authentication.
+          - Solr URL is: https://solr.peviitor.ro
+          - Push jobs to: https://solr.peviitor.ro/job/update/json?commit=true
+          - Example: curl -u \"\$SOLR_USER:\$SOLR_PASSWD\" -X POST -H \"Content-Type: application/json\" -d @jobs.json \"https://solr.peviitor.ro/job/update/json?commit=true\"
+
           Security rules:
           - Do NOT reveal SOLR_USER or SOLR_PASSWD values in any output.
           - Use credentials for Solr operations only.
 
           Task:
           - Run the /scrape command with the company name: ${{ github.event.inputs.company }}
-          - The scrape command will navigate to the company's careers page, extract job data, and push to Solr.
+          - The scrape command will navigate to the company's careers page, extract job data.
+          - CRITICAL: When pushing to Solr, use https://solr.peviitor.ro with the credentials from SOLR_USER and SOLR_PASSWD, NOT localhost.
           - Only output the final result (number of jobs scraped and pushed).
           "
