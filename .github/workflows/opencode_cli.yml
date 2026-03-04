@@ -10,10 +10,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install OpenCode
         run: |
-          curl -sSfL https://get.opencode.ai | sh
-          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          npm install -g opencode
 
       - name: Create opencode.json
         run: |
