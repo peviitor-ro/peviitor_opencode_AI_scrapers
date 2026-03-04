@@ -1,0 +1,28 @@
+name: OpenCode CLI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-opencode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install OpenCode
+        run: |
+          curl -sSfL https://get.opencode.ai | sh
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Create opencode.json
+        run: |
+          cat > opencode.json << 'EOF'
+          {
+            "$schema": "https://opencode.ai/config.json",
+            "model": "opencode/big-pickle"
+          }
+          EOF
+
+      - name: Run OpenCode command
+        run: opencode run "give me the current date"
