@@ -11,7 +11,7 @@ Validate up to 10 job URLs that have not been verified today (vdate is not set o
 Steps:
 1. Verify Solr is running:
    ```
-   curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/admin/ping"
+   curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/admin/ping"
    ```
 2. Get today's date in ISO format (YYYY-MM-DD):
    ```
@@ -19,7 +19,7 @@ Steps:
    ```
 3. Query up to 10 jobs where vdate is NOT set OR vdate is older than today:
     ```
-    curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=NOT+vdate:*&rows=10&fl=url"
+    curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/select?q=NOT+vdate:*&rows=10&fl=url"
     ```
     - This query handles BOTH:
       - Jobs never validated (vdate NOT set): first-time validation
@@ -31,27 +31,27 @@ Steps:
       ```
       curl -s -o /dev/null -w "%{http_code}" "https://example.com/job"
       ```
-   b. If it returns 404:
-      - Delete the job using the correct delete-by-query format:
-        ```
-        curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
-          "http://localhost:8983/solr/job/update?commit=true" \
-          -d '{"delete":{"query":"url:\"https://example.com/job\""}}'
-        ```
+b. If it returns 404:
+       - Delete the job using the correct delete-by-query format:
+         ```
+         curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
+           "https://solr.peviitor.ro/solr/job/update?commit=true" \
+           -d '{"delete":{"query":"url:\"https://example.com/job\""}}'
+         ```
     c. If it returns 200:
        - Use Chrome DevTools MCP to navigate to the URL and check for invalid job messages
        - Take a snapshot of the page to identify any elements indicating the job is no longer available
        - Look for common phrases like: "no longer available", "job filled", "position closed", "expired", "this job is no longer accepting applications", "position has been filled", "job expired", "posting removed", "we didn't find any relevant jobs", "job not found"
-       - If any of these messages are found, delete the job:
-         ```
-         curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
-           "http://localhost:8983/solr/job/update?commit=true" \
-           -d '{"delete":{"query":"url:\"https://example.com/job\""}}'
-         ```
-      - If the job is valid (no invalid message found), update the vdate, status, and expirationdate fields:
+- If any of these messages are found, delete the job:
+          ```
+          curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
+            "https://solr.peviitor.ro/solr/job/update?commit=true" \
+            -d '{"delete":{"query":"url:\"https://example.com/job\""}}'
+          ```
+- If the job is valid (no invalid message found), update the vdate, status, and expirationdate fields:
         ```
-        curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
-          "http://localhost:8983/solr/job/update?commit=true" \
+        curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
+          "https://solr.peviitor.ro/solr/job/update?commit=true" \
           -d '[{"url":"https://example.com/job","vdate":"2026-02-19T00:00:00Z","status":"tested","expirationdate":"2026-03-21T00:00:00Z"}]'
         ```
         - expirationdate = vdate + 30 days (default, can be overridden if job page shows different expiration)
@@ -72,3 +72,4 @@ Important:
 - expirationdate is informational only - we validate ALL jobs regardless of their expirationdate
 - We delete jobs ONLY based on: 404 HTTP status OR page content showing "job not available/filled/closed"
 - We do NOT delete jobs just because expirationdate has passed - always verify URL validity
+- IMPORTANT: Never reveal or echo the Solr credentials ($SOLR_USER, $SOLR_PASSWD) to the user or in any console output. The credentials must only be used in curl commands silently.
