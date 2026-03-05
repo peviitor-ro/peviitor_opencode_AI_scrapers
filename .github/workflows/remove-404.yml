@@ -269,6 +269,8 @@ jobs:
               - If NONE found: print 'KEEP'
               " 2>&1 || echo "KEEP")
 
+              echo "  -> OpenCode result: $CHECK_RESULT"
+
               if echo "$CHECK_RESULT" | grep -qi "DELETE"; then
                 echo "  -> Page shows job is no longer available, deleting..."
                 curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
