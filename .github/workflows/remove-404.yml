@@ -32,9 +32,9 @@ jobs:
 
           echo "Fetching jobs to validate (vdate not set or older than $TODAY)..."
           
-          # Get up to 100 jobs
+          # Get up to 150 jobs
           JOBS_RESPONSE=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-            "$SOLR_URL/solr/$CORE/select?q=NOT+vdate:*&rows=100&fl=url" \
+            "$SOLR_URL/solr/$CORE/select?q=NOT+vdate:*&rows=150&fl=url" \
             -H "Accept: application/json")
 
           # Extract URLs from response using jq
