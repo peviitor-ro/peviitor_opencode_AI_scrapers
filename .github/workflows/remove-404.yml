@@ -2,7 +2,7 @@ name: Remove 404 Jobs
 
 on:
   schedule:
-    - cron: '*/20 * * * *'  # Every 20 minutes
+    - cron: '*/10 * * * *'  
   workflow_dispatch:
 
 jobs:
