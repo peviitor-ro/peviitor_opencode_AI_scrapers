@@ -2,22 +2,13 @@ name: Remove 404 Jobs
 
 on:
   workflow_dispatch:
-    inputs:
-      vdate:
-        description: 'Validation date (YYYY-MM-DD), leave empty for today'
-        required: false
-        default: ''
 
 jobs:
   validate-urls:
     runs-on: ubuntu-latest
 
     env:
-      SOLR_URL: ${{ vars.SOLR_URL }}
-      API_URL: ${{ vars.API_URL }}
-      API_USER: ${{ secrets.API_USER }}
-      API_PASS: ${{ secrets.API_PASS }}
-      VDATE: ${{ github.event.inputs.vdate }}
+      SOLR_URL: "https://solr.peviitor.ro/solr/job"
 
     steps:
       - name: Checkout
@@ -27,33 +18,35 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Ensure VDATE has a value
-          if [ -z "${VDATE:-}" ]; then
-            VDATE="$(date +%Y-%m-%d)"
-          fi
+          VDATE="$(date +%Y-%m-%d)"
           echo "Using VDATE=${VDATE}"
+          echo "SOLR_URL=${SOLR_URL}"
 
           sudo apt-get update -y
           sudo apt-get install -y jq
 
-          # Fetch jobs to validate
           echo "Fetching jobs to validate from Solr..."
-          JOBS_RESPONSE=$(curl -sS "${SOLR_URL}/select?q=vdate:${VDATE}%20AND%20status:ACTIVE&rows=5000&fl=id,url&wt=json") || {
-            echo "Error: Failed to query Solr for jobs."
-            exit 1
-          }
+          JOBS_RESPONSE=$(curl -sS "${SOLR_URL}/select?q=vdate:${VDATE}%20AND%20status:ACTIVE&rows=5000&fl=id,url&wt=json")
 
-          echo "Sample JOBS_RESPONSE:"
-          echo "$JOBS_RESPONSE" | head -200
+          echo "Raw JOBS_RESPONSE (first 200 chars):"
+          echo "$JOBS_RESPONSE" | head -c 200; echo
 
-          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null || echo "")
-          if [ -z "$URLS" ]; then
-            echo "No jobs found for VDATE=${VDATE}. Exiting."
+          NUM_FOUND=$(echo "$JOBS_RESPONSE" | jq '.response.numFound')
+          echo "numFound=${NUM_FOUND}"
+
+          if [ "$NUM_FOUND" -eq 0 ]; then
+            echo "No jobs found, nothing to do."
             exit 0
           fi
 
-          echo "Testing URLs..."
-          UPDATE_JSON='['
+          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null || echo "")
+          if [ -z "$URLS" ]; then
+            echo "Jobs found but no URLs, exiting."
+            exit 0
+          fi
+
+          echo "Testing URLs and building update list..."
+          UPDATE_DOCS='['
           FIRST=true
 
           while IFS= read -r URL; do
@@ -72,9 +65,36 @@ jobs:
                 continue
               fi
 
-              EXISTING_DOC=$(curl -sS "${SOLR_URL}/select?q=id:${JOB_ID}&rows=1&wt=json") || {
-                echo "Warning: Failed to fetch existing doc for id ${JOB_ID}, skipping."
-                continue
-              }
+              DOC_UPDATE=$(jq -n --arg id "$JOB_ID" '
+                {
+                  "id": $id,
+                  "status": { "set": "INACTIVE" }
+                }')
 
-              TITLE=$(echo "$EXISTING_DOC"   | jq -r '.response.docs[0].title // empty'
+              if [ "$FIRST" = true ]; then
+                UPDATE_DOCS+="$DOC_UPDATE"
+                FIRST=false
+              else
+                UPDATE_DOCS+=",$DOC_UPDATE"
+              fi
+            fi
+          done <<< "$URLS"
+
+          UPDATE_DOCS+=']'
+
+          if [ "$UPDATE_DOCS" = "[]" ]; then
+            echo "No jobs to update. Exiting."
+            exit 0
+          fi
+
+          echo "Final Solr update payload:"
+          echo "$UPDATE_DOCS"
+
+          echo "Sending update to Solr..."
+          curl -sS \
+            -H "Content-Type: application/json" \
+            -X POST \
+            --data-binary "$UPDATE_DOCS" \
+            "${SOLR_URL}/update?commit=true"
+
+          echo "Done."
