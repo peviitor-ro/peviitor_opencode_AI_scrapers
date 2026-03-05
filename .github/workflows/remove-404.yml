@@ -1,0 +1,86 @@
+name: Remove 404 Jobs
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # Daily at 4 AM
+  workflow_dispatch:
+
+jobs:
+  validate-urls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate and remove 404 jobs
+        env:
+          SOLR_USER: ${{ secrets.SOLR_USER }}
+          SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
+        run: |
+          set -euo pipefail
+          set +x
+
+          SOLR_URL="https://solr.peviitor.ro"
+          CORE="job"
+          TODAY=$(date -u +"%Y-%m-%d")
+          EXPIRATION=$(date -u -d "+30 days" +"%Y-%m-%d")
+
+          echo "Fetching jobs to validate (vdate not set or older than $TODAY)..."
+          
+          # Get up to 100 jobs where vdate is NOT set OR vdate is older than today
+          JOBS_RESPONSE=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
+            "$SOLR_URL/solr/$CORE/select?q=NOT+vdate:*&rows=100&fl=url" \
+            -H "Accept: application/json")
+
+          # Extract URLs from response using grep and sed
+          URLS=$(echo "$JOBS_RESPONSE" | grep -oP '"url":"[^"]+"' | sed 's/"url":"//;s/"$//' | head -100)
+
+          if [ -z "$URLS" ]; then
+            echo "No jobs to validate."
+            exit 0
+          fi
+
+          echo "Found $(echo "$URLS" | wc -l) jobs to validate"
+
+          VALID_COUNT=0
+          DELETE_COUNT=0
+
+          # Process each URL
+          while IFS= read -r URL; do
+            if [ -z "$URL" ]; then
+              continue
+            fi
+
+            echo "Checking: $URL"
+
+            # Check HTTP status
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$URL" || echo "000")
+
+            if [ "$HTTP_CODE" = "404" ]; then
+              echo "  -> 404, deleting..."
+              curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
+                "$SOLR_URL/solr/$CORE/update?commit=true" \
+                -H "Content-Type: application/json" \
+                -d "{\"delete\":{\"query\":\"url:\\\"$URL\\\"\"}}"
+              DELETE_COUNT=$((DELETE_COUNT + 1))
+            elif [ "$HTTP_CODE" = "200" ]; then
+              echo "  -> 200, updating vdate..."
+              # Use atomic update to preserve non-stored fields
+              curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
+                "$SOLR_URL/solr/$CORE/update?commit=true" \
+                -H "Content-Type: application/json" \
+                -d "{\"add\":{\"doc\":{\"url\":\"$URL\",\"vdate\":\"${TODAY}T00:00:00Z\",\"status\":\"tested\",\"expirationdate\":\"${EXPIRATION}T00:00:00Z\"}}}"
+              VALID_COUNT=$((VALID_COUNT + 1))
+            else
+              echo "  -> HTTP $HTTP_CODE, skipping..."
+            fi
+          done <<< "$URLS"
+
+          echo ""
+          echo "========================================"
+          echo "Results:"
+          echo "  Validated: $VALID_COUNT"
+          echo "  Removed (404): $DELETE_COUNT"
+          echo "========================================"
