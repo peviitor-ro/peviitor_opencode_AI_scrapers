@@ -9,6 +9,8 @@ jobs:
 
     env:
       SOLR_URL: "https://solr.peviitor.ro/solr/job"
+      SOLR_USER: ${{ secrets.SOLR_USER }}
+      SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
 
     steps:
       - name: Checkout
@@ -26,7 +28,8 @@ jobs:
           sudo apt-get install -y jq
 
           echo "Fetching jobs to validate from Solr..."
-          JOBS_RESPONSE=$(curl -sS "${SOLR_URL}/select?q=vdate:${VDATE}%20AND%20status:ACTIVE&rows=5000&fl=id,url&wt=json")
+          JOBS_RESPONSE=$(curl -sS -u "${SOLR_USER}:${SOLR_PASSWD}" \
+            "${SOLR_URL}/select?q=vdate:${VDATE}%20AND%20status:ACTIVE&rows=5000&fl=id,url&wt=json")
 
           echo "Raw JOBS_RESPONSE (first 200 chars):"
           echo "$JOBS_RESPONSE" | head -c 200; echo
@@ -91,7 +94,7 @@ jobs:
           echo "$UPDATE_DOCS"
 
           echo "Sending update to Solr..."
-          curl -sS \
+          curl -sS -u "${SOLR_USER}:${SOLR_PASSWD}" \
             -H "Content-Type: application/json" \
             -X POST \
             --data-binary "$UPDATE_DOCS" \
