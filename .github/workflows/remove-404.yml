@@ -345,9 +345,6 @@ jobs:
                 echo "  -> Updated with vdate"
                 VALID_COUNT=$((VALID_COUNT + 1))
               fi
-              fi
-            else
-              echo "  -> HTTP $HTTP_CODE, skipping..."
             fi
           done <<< "$URLS"
 
