@@ -1,157 +1,80 @@
 name: Remove 404 Jobs
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'  
   workflow_dispatch:
+    inputs:
+      vdate:
+        description: 'Validation date (YYYY-MM-DD), leave empty for today'
+        required: false
+        default: ''
 
 jobs:
   validate-urls:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+
+    env:
+      SOLR_URL: ${{ vars.SOLR_URL }}
+      API_URL: ${{ vars.API_URL }}
+      API_USER: ${{ secrets.API_USER }}
+      API_PASS: ${{ secrets.API_PASS }}
+      VDATE: ${{ github.event.inputs.vdate }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
       - name: Validate and remove 404 jobs
-        env:
-          SOLR_USER: ${{ secrets.SOLR_USER }}
-          SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
         run: |
           set -euo pipefail
-          set +x
 
-          SOLR_URL="https://solr.peviitor.ro"
-          CORE="job"
-          TODAY=$(date -u +"%Y-%m-%d")
-          EXPIRATION=$(date -u -d "+30 days" +"%Y-%m-%d")
+          # Ensure VDATE has a value
+          if [ -z "${VDATE:-}" ]; then
+            VDATE="$(date +%Y-%m-%d)"
+          fi
+          echo "Using VDATE=${VDATE}"
 
-          echo "Fetching jobs to validate (vdate not set)..."
-          
-          # Get up to 150 jobs
-          JOBS_RESPONSE=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-            "$SOLR_URL/solr/$CORE/select?q=-vdate:[*+TO+*]&rows=150&fl=url" \
-            -H "Accept: application/json")
+          sudo apt-get update -y
+          sudo apt-get install -y jq
 
-          # Extract URLs from response using jq
-          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null | head -150)
+          # Fetch jobs to validate
+          echo "Fetching jobs to validate from Solr..."
+          JOBS_RESPONSE=$(curl -sS "${SOLR_URL}/select?q=vdate:${VDATE}%20AND%20status:ACTIVE&rows=5000&fl=id,url&wt=json") || {
+            echo "Error: Failed to query Solr for jobs."
+            exit 1
+          }
 
+          echo "Sample JOBS_RESPONSE:"
+          echo "$JOBS_RESPONSE" | head -200
+
+          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null || echo "")
           if [ -z "$URLS" ]; then
-            echo "No jobs to validate."
+            echo "No jobs found for VDATE=${VDATE}. Exiting."
             exit 0
           fi
 
-          echo "Found $(echo "$URLS" | wc -l) jobs to validate"
+          echo "Testing URLs..."
+          UPDATE_JSON='['
+          FIRST=true
 
-          VALID_COUNT=0
-          DELETE_COUNT=0
-          DELETED_URLS=""
-
-          # Process each URL
           while IFS= read -r URL; do
-            if [ -z "$URL" ]; then
-              continue
-            fi
+            [ -z "$URL" ] && continue
 
-            echo "Checking: $URL"
+            echo "Checking $URL"
+            STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || echo "000")
 
-            # Check HTTP status (follow redirects to get final status)
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 -L "$URL" || echo "000")
+            if [ "$STATUS_CODE" = "404" ] || [ "$STATUS_CODE" = "410" ] || [ "$STATUS_CODE" = "000" ]; then
+              echo "URL seems invalid (status $STATUS_CODE), marking job as INACTIVE in Solr."
 
-            if [ "$HTTP_CODE" = "404" ] || [ "$HTTP_CODE" = "410" ]; then
-              echo "  -> $HTTP_CODE, deleting..."
-              curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
-                "$SOLR_URL/solr/$CORE/update?commit=true" \
-                -H "Content-Type: application/json" \
-                -d "{\"delete\":{\"query\":\"url:\\\"$URL\\\"\"}}"
-              DELETE_COUNT=$((DELETE_COUNT + 1))
-              DELETED_URLS="${DELETED_URLS}${URL}"$'\n'
-            elif [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "405" ]; then
-              # Skip Chrome content check for anofm URLs - they return 404 when expired
-              if echo "$URL" | grep -qi "anofm"; then
-                echo "  -> anofm URL, updating vdate..."
-              else
-                echo "  -> $HTTP_CODE, updating vdate..."
-              fi
-              
-              # Fetch existing document and update
-              EXISTING_DOC=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-                "$SOLR_URL/solr/$CORE/select?q=url:\"$URL\"&rows=1" \
-                -H "Accept: application/json")
+              JOB_ID=$(echo "$JOBS_RESPONSE" | jq -r --arg url "$URL" '.response.docs[] | select(.url == $url) | .id' 2>/dev/null || echo "")
 
-              TITLE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].title // empty' 2>/dev/null)
-              COMPANY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].company // empty' 2>/dev/null)
-              LOCATION=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].location // empty' 2>/dev/null)
-              DATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].date // empty' 2>/dev/null)
-              CIF=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].cif // empty' 2>/dev/null)
-              TAGS=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].tags // empty' 2>/dev/null)
-              WORKMODE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].workmode // empty' 2>/dev/null)
-              EXPIRATIONDATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].expirationdate // empty' 2>/dev/null)
-              SALARY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].salary // empty' 2>/dev/null)
-
-              if [ -z "$EXPIRATIONDATE" ]; then
-                EXPIRATIONDATE="${EXPIRATION}T00:00:00Z"
+              if [ -z "$JOB_ID" ]; then
+                echo "Warning: Could not find job id for URL $URL, skipping."
+                continue
               fi
 
-              UPDATE_JSON=$(jq -n \
-                --arg url "$URL" \
-                --arg vdate "${TODAY}T00:00:00Z" \
-                --arg status "tested" \
-                --arg expirationdate "$EXPIRATIONDATE" \
-                --arg title "$TITLE" \
-                --arg company "$COMPANY" \
-                --arg date "$DATE" \
-                --arg cif "$CIF" \
-                --arg workmode "$WORKMODE" \
-                --arg salary "$SALARY" \
-                --arg location "$LOCATION" \
-                --arg tags "$TAGS" \
-                '{
-                  add: {
-                    doc: (
-                      {
-                        url: $url,
-                        vdate: $vdate,
-                        status: $status,
-                        expirationdate: $expirationdate
-                      }
-                      + (if $title != "" then {title: $title} else {} end)
-                      + (if $company != "" then {company: $company} end)
-                      + (if $date != "" then {date: $date} end)
-                      + (if $cif != "" then {cif: $cif} end)
-                      + (if $workmode != "" then {workmode: $workmode} end)
-                      + (if $salary != "" then {salary: $salary} end)
-                      + (if $location != "null" and $location != "" then {location: ($location | fromjson)} else {} end)
-                      + (if $tags != "null" and $tags != "" then {tags: ($tags | fromjson)} else {} end)
-                    )
-                  }
-                }')
+              EXISTING_DOC=$(curl -sS "${SOLR_URL}/select?q=id:${JOB_ID}&rows=1&wt=json") || {
+                echo "Warning: Failed to fetch existing doc for id ${JOB_ID}, skipping."
+                continue
+              }
 
-              curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
-                "$SOLR_URL/solr/$CORE/update?commit=true" \
-                -H "Content-Type: application/json" \
-                -d "$UPDATE_JSON"
-
-              echo "  -> Updated with vdate"
-              VALID_COUNT=$((VALID_COUNT + 1))
-            else
-              echo "  -> HTTP $HTTP_CODE, skipping..."
-            fi
-          done <<< "$URLS"
-
-          echo ""
-          echo "========================================"
-          echo "Results:"
-          echo "  Validated: $VALID_COUNT"
-          echo "  Removed (404/410): $DELETE_COUNT"
-          echo "========================================"
-
-          if [ "$DELETE_COUNT" -gt 0 ]; then
-            echo ""
-            echo "Removed URLs (click to verify):"
-            echo "$DELETED_URLS"
-          fi
+              TITLE=$(echo "$EXISTING_DOC"   | jq -r '.response.docs[0].title // empty'
