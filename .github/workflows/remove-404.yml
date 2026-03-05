@@ -30,15 +30,15 @@ jobs:
           TODAY=$(date -u +"%Y-%m-%d")
           EXPIRATION=$(date -u -d "+30 days" +"%Y-%m-%d")
 
-          echo "Fetching jobs to validate (vdate not set or older than $TODAY)..."
+          echo "Fetching jobs to validate (vdate not set)..."
           
           # Get up to 150 jobs
           JOBS_RESPONSE=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-            "$SOLR_URL/solr/$CORE/select?q=NOT+vdate:*&rows=150&fl=url" \
+            "$SOLR_URL/solr/$CORE/select?q=-vdate:[*+TO+*]&rows=150&fl=url" \
             -H "Accept: application/json")
 
           # Extract URLs from response using jq
-          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null | head -100)
+          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null | head -150)
 
           if [ -z "$URLS" ]; then
             echo "No jobs to validate."
