@@ -93,11 +93,16 @@ jobs:
               TAGS=$(echo "$EXISTING_DOC" | grep -oP '"tags":\[[^\]]*\]' | head -1)
               # Extract workmode if exists
               WORKMODE=$(echo "$EXISTING_DOC" | grep -oP '"workmode":"[^"]*"' | head -1 | sed 's/"workmode":"//;s/"$//')
-              # Extract salary if exists
-              SALARY=$(echo "$EXISTING_DOC" | grep -oP '"salary":"[^"]*"' | head -1 | sed 's/"salary":"//;s/"$//')
+              # Extract expirationdate if exists
+              EXPIRATIONDATE=$(echo "$EXISTING_DOC" | grep -oP '"expirationdate":"[^"]*"' | head -1 | sed 's/"expirationdate":"//;s/"$//')
+              
+              # If no existing expirationdate, calculate vdate + 30 days
+              if [ -z "$EXPIRATIONDATE" ]; then
+                EXPIRATIONDATE="${EXPIRATION}T00:00:00Z"
+              fi
 
               # Build atomic update preserving all existing fields
-              UPDATE_DOC="{\"add\":{\"doc\":{\"url\":\"$URL\",\"vdate\":\"${TODAY}T00:00:00Z\",\"status\":\"tested\",\"expirationdate\":\"${EXPIRATION}T00:00:00Z\""
+              UPDATE_DOC="{\"add\":{\"doc\":{\"url\":\"$URL\",\"vdate\":\"${TODAY}T00:00:00Z\",\"status\":\"tested\",\"expirationdate\":\"$EXPIRATIONDATE\""
 
               if [ -n "$TITLE" ]; then
                 UPDATE_DOC="${UPDATE_DOC},\"title\":\"$TITLE\""
