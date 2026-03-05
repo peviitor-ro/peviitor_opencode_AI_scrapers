@@ -14,45 +14,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Chrome
-        run: |
-          wget -q -O /tmp/google-chrome-keyring https://dl-ssl.google.com/linux/linux_signing_key.pub
-          sudo mkdir -p /etc/apt/keyrings
-          sudo cp /tmp/google-chrome-keyring /etc/apt/keyrings/google-chrome.asc
-          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.asc] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-
       - name: Install jq
         run: sudo apt-get install -y jq
-
-      - name: Start Chrome with remote debugging
-        run: |
-          google-chrome --remote-debugging-port=9222 --headless --no-sandbox --disable-dev-shm-usage &
-          sleep 3
-
-      - name: Install OpenCode
-        run: npm install -g opencode-ai
-
-      - name: Configure opencode.json
-        run: |
-          cat > opencode.json << 'EOF'
-          {
-            "$schema": "https://opencode.ai/config.json",
-            "model": "opencode/big-pickle",
-            "mcp": {
-              "chrome-devtools": {
-                "type": "local",
-                "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--browser-url=http://127.0.0.1:9222"]
-              }
-            }
-          }
-          EOF
 
       - name: Validate and remove 404 jobs
         env:
@@ -69,13 +32,13 @@ jobs:
 
           echo "Fetching jobs to validate (vdate not set or older than $TODAY)..."
           
-          # Get up to 50 jobs (limited for Chrome-based content checking)
+          # Get up to 100 jobs
           JOBS_RESPONSE=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-            "$SOLR_URL/solr/$CORE/select?q=NOT+vdate:*&rows=50&fl=url" \
+            "$SOLR_URL/solr/$CORE/select?q=NOT+vdate:*&rows=100&fl=url" \
             -H "Accept: application/json")
 
           # Extract URLs from response using jq
-          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null | head -50)
+          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null | head -100)
 
           if [ -z "$URLS" ]; then
             echo "No jobs to validate."
@@ -110,243 +73,73 @@ jobs:
             elif [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "405" ]; then
               # Skip Chrome content check for anofm URLs - they return 404 when expired
               if echo "$URL" | grep -qi "anofm"; then
-                echo "  -> anofm URL, skipping Chrome check (they use 404 for expired jobs)"
-                echo "  -> Updating vdate..."
-                
-                # Fetch existing document and update (same as below)
-                EXISTING_DOC=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-                  "$SOLR_URL/solr/$CORE/select?q=url:\"$URL\"&rows=1" \
-                  -H "Accept: application/json")
-
-                TITLE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].title // empty' 2>/dev/null)
-                COMPANY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].company // empty' 2>/dev/null)
-                LOCATION=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].location // empty' 2>/dev/null)
-                DATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].date // empty' 2>/dev/null)
-                CIF=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].cif // empty' 2>/dev/null)
-                TAGS=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].tags // empty' 2>/dev/null)
-                WORKMODE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].workmode // empty' 2>/dev/null)
-                EXPIRATIONDATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].expirationdate // empty' 2>/dev/null)
-                SALARY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].salary // empty' 2>/dev/null)
-
-                if [ -z "$EXPIRATIONDATE" ]; then
-                  EXPIRATIONDATE="${EXPIRATION}T00:00:00Z"
-                fi
-
-                UPDATE_JSON=$(jq -n \
-                  --arg url "$URL" \
-                  --arg vdate "${TODAY}T00:00:00Z" \
-                  --arg status "tested" \
-                  --arg expirationdate "$EXPIRATIONDATE" \
-                  --arg title "$TITLE" \
-                  --arg company "$COMPANY" \
-                  --arg date "$DATE" \
-                  --arg cif "$CIF" \
-                  --arg workmode "$WORKMODE" \
-                  --arg salary "$SALARY" \
-                  --arg location "$LOCATION" \
-                  --arg tags "$TAGS" \
-                  '{
-                    add: {
-                      doc: (
-                        {
-                          url: $url,
-                          vdate: $vdate,
-                          status: $status,
-                          expirationdate: $expirationdate
-                        }
-                        + (if $title != "" then {title: $title} else {} end)
-                        + (if $company != "" then {company: $company} end)
-                        + (if $date != "" then {date: $date} end)
-                        + (if $cif != "" then {cif: $cif} end)
-                        + (if $workmode != "" then {workmode: $workmode} end)
-                        + (if $salary != "" then {salary: $salary} end)
-                        + (if $location != "null" and $location != "" then {location: ($location | fromjson)} else {} end)
-                        + (if $tags != "null" and $tags != "" then {tags: ($tags | fromjson)} else {} end)
-                      )
-                    }
-                  }')
-
-                curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
-                  "$SOLR_URL/solr/$CORE/update?commit=true" \
-                  -H "Content-Type: application/json" \
-                  -d "$UPDATE_JSON"
-
-                echo "  -> Updated with vdate"
-                VALID_COUNT=$((VALID_COUNT + 1))
+                echo "  -> anofm URL, updating vdate..."
               else
-                if [ "$HTTP_CODE" = "405" ]; then
-                  echo "  -> HTTP 405, updating vdate (POST not allowed but URL is valid)..."
-                  
-                  # Fetch existing document and update (same as anofm)
-                  EXISTING_DOC=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-                    "$SOLR_URL/solr/$CORE/select?q=url:\"$URL\"&rows=1" \
-                    -H "Accept: application/json")
-
-                  TITLE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].title // empty' 2>/dev/null)
-                  COMPANY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].company // empty' 2>/dev/null)
-                  LOCATION=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].location // empty' 2>/dev/null)
-                  DATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].date // empty' 2>/dev/null)
-                  CIF=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].cif // empty' 2>/dev/null)
-                  TAGS=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].tags // empty' 2>/dev/null)
-                  WORKMODE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].workmode // empty' 2>/dev/null)
-                  EXPIRATIONDATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].expirationdate // empty' 2>/dev/null)
-                  SALARY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].salary // empty' 2>/dev/null)
-
-                  if [ -z "$EXPIRATIONDATE" ]; then
-                    EXPIRATIONDATE="${EXPIRATION}T00:00:00Z"
-                  fi
-
-                  UPDATE_JSON=$(jq -n \
-                    --arg url "$URL" \
-                    --arg vdate "${TODAY}T00:00:00Z" \
-                    --arg status "tested" \
-                    --arg expirationdate "$EXPIRATIONDATE" \
-                    --arg title "$TITLE" \
-                    --arg company "$COMPANY" \
-                    --arg date "$DATE" \
-                    --arg cif "$CIF" \
-                    --arg workmode "$WORKMODE" \
-                    --arg salary "$SALARY" \
-                    --arg location "$LOCATION" \
-                    --arg tags "$TAGS" \
-                    '{
-                      add: {
-                        doc: (
-                          {
-                            url: $url,
-                            vdate: $vdate,
-                            status: $status,
-                            expirationdate: $expirationdate
-                          }
-                          + (if $title != "" then {title: $title} else {} end)
-                          + (if $company != "" then {company: $company} end)
-                          + (if $date != "" then {date: $date} end)
-                          + (if $cif != "" then {cif: $cif} end)
-                          + (if $workmode != "" then {workmode: $workmode} end)
-                          + (if $salary != "" then {salary: $salary} end)
-                          + (if $location != "null" and $location != "" then {location: ($location | fromjson)} else {} end)
-                          + (if $tags != "null" and $tags != "" then {tags: ($tags | fromjson)} else {} end)
-                        )
-                      }
-                    }')
-
-                  curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
-                    "$SOLR_URL/solr/$CORE/update?commit=true" \
-                    -H "Content-Type: application/json" \
-                    -d "$UPDATE_JSON"
-
-                  echo "  -> Updated with vdate"
-                  VALID_COUNT=$((VALID_COUNT + 1))
-                else
-                  echo "  -> $HTTP_CODE, checking page content..."
-                  # Use OpenCode with Chrome to check page content for invalid job messages
-                  CHECK_RESULT=$(opencode run "
-              You have Chrome DevTools MCP access on port 9222.
-
-              Task:
-              1. Navigate to this URL: $URL
-              2. Wait for page to fully load
-              3. Get the page text content (extract all visible text)
-              4. Check if the page contains any of these phrases (case-insensitive):
-                 - 'no longer available'
-                 - 'job filled'
-                 - 'position closed'
-                 - 'expired'
-                 - 'this job is no longer accepting applications'
-                 - 'position has been filled'
-                 - 'posting removed'
-                 - 'job not found'
-                 - 'position no longer exists'
-                 - 'we didn't find any relevant jobs'
-                 - 'this job is no longer available'
-                 - 'job expired'
-                 - 'this position has been filled'
-                 - 'applications closed'
-                 - 'no longer accepting applications'
-              
-              Output ONLY:
-              - If ANY of these phrases found: print 'DELETE'
-              - If NONE found: print 'KEEP'
-              " 2>&1 || echo "KEEP")
-
-              echo "  -> OpenCode result: $CHECK_RESULT"
-
-              if echo "$CHECK_RESULT" | grep -qi "DELETE"; then
-                echo "  -> Page shows job is no longer available, deleting..."
-                curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
-                  "$SOLR_URL/solr/$CORE/update?commit=true" \
-                  -H "Content-Type: application/json" \
-                  -d "{\"delete\":{\"query\":\"url:\\\"$URL\\\"\"}}"
-                DELETE_COUNT=$((DELETE_COUNT + 1))
-                DELETED_URLS="${DELETED_URLS}${URL}"$'\n'
-              else
-                echo "  -> Job is valid, updating vdate..."
-                
-                # Fetch existing document with all stored fields
-                EXISTING_DOC=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-                  "$SOLR_URL/solr/$CORE/select?q=url:\"$URL\"&rows=1" \
-                  -H "Accept: application/json")
-
-                # Extract fields using jq - safe JSON parsing
-                TITLE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].title // empty' 2>/dev/null)
-                COMPANY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].company // empty' 2>/dev/null)
-                LOCATION=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].location // empty' 2>/dev/null)
-                DATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].date // empty' 2>/dev/null)
-                CIF=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].cif // empty' 2>/dev/null)
-                TAGS=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].tags // empty' 2>/dev/null)
-                WORKMODE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].workmode // empty' 2>/dev/null)
-                EXPIRATIONDATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].expirationdate // empty' 2>/dev/null)
-                SALARY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].salary // empty' 2>/dev/null)
-
-                # If no existing expirationdate, calculate vdate + 30 days
-                if [ -z "$EXPIRATIONDATE" ]; then
-                  EXPIRATIONDATE="${EXPIRATION}T00:00:00Z"
-                fi
-
-                # Build atomic update preserving all existing fields using jq
-                UPDATE_JSON=$(jq -n \
-                  --arg url "$URL" \
-                  --arg vdate "${TODAY}T00:00:00Z" \
-                  --arg status "tested" \
-                  --arg expirationdate "$EXPIRATIONDATE" \
-                  --arg title "$TITLE" \
-                  --arg company "$COMPANY" \
-                  --arg date "$DATE" \
-                  --arg cif "$CIF" \
-                  --arg workmode "$WORKMODE" \
-                  --arg salary "$SALARY" \
-                  --arg location "$LOCATION" \
-                  --arg tags "$TAGS" \
-                  '{
-                    add: {
-                      doc: (
-                        {
-                          url: $url,
-                          vdate: $vdate,
-                          status: $status,
-                          expirationdate: $expirationdate
-                        }
-                        + (if $title != "" then {title: $title} else {} end)
-                        + (if $company != "" then {company: $company} end)
-                        + (if $date != "" then {date: $date} end)
-                        + (if $cif != "" then {cif: $cif} end)
-                        + (if $workmode != "" then {workmode: $workmode} end)
-                        + (if $salary != "" then {salary: $salary} end)
-                        + (if $location != "null" and $location != "" then {location: ($location | fromjson)} else {} end)
-                        + (if $tags != "null" and $tags != "" then {tags: ($tags | fromjson)} else {} end)
-                      )
-                    }
-                  }')
-
-                # Send atomic update
-                curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
-                  "$SOLR_URL/solr/$CORE/update?commit=true" \
-                  -H "Content-Type: application/json" \
-                  -d "$UPDATE_JSON"
-
-                echo "  -> Updated with vdate"
-                VALID_COUNT=$((VALID_COUNT + 1))
+                echo "  -> $HTTP_CODE, updating vdate..."
               fi
+              
+              # Fetch existing document and update
+              EXISTING_DOC=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
+                "$SOLR_URL/solr/$CORE/select?q=url:\"$URL\"&rows=1" \
+                -H "Accept: application/json")
+
+              TITLE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].title // empty' 2>/dev/null)
+              COMPANY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].company // empty' 2>/dev/null)
+              LOCATION=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].location // empty' 2>/dev/null)
+              DATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].date // empty' 2>/dev/null)
+              CIF=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].cif // empty' 2>/dev/null)
+              TAGS=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].tags // empty' 2>/dev/null)
+              WORKMODE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].workmode // empty' 2>/dev/null)
+              EXPIRATIONDATE=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].expirationdate // empty' 2>/dev/null)
+              SALARY=$(echo "$EXISTING_DOC" | jq -r '.response.docs[0].salary // empty' 2>/dev/null)
+
+              if [ -z "$EXPIRATIONDATE" ]; then
+                EXPIRATIONDATE="${EXPIRATION}T00:00:00Z"
+              fi
+
+              UPDATE_JSON=$(jq -n \
+                --arg url "$URL" \
+                --arg vdate "${TODAY}T00:00:00Z" \
+                --arg status "tested" \
+                --arg expirationdate "$EXPIRATIONDATE" \
+                --arg title "$TITLE" \
+                --arg company "$COMPANY" \
+                --arg date "$DATE" \
+                --arg cif "$CIF" \
+                --arg workmode "$WORKMODE" \
+                --arg salary "$SALARY" \
+                --arg location "$LOCATION" \
+                --arg tags "$TAGS" \
+                '{
+                  add: {
+                    doc: (
+                      {
+                        url: $url,
+                        vdate: $vdate,
+                        status: $status,
+                        expirationdate: $expirationdate
+                      }
+                      + (if $title != "" then {title: $title} else {} end)
+                      + (if $company != "" then {company: $company} end)
+                      + (if $date != "" then {date: $date} end)
+                      + (if $cif != "" then {cif: $cif} end)
+                      + (if $workmode != "" then {workmode: $workmode} end)
+                      + (if $salary != "" then {salary: $salary} end)
+                      + (if $location != "null" and $location != "" then {location: ($location | fromjson)} else {} end)
+                      + (if $tags != "null" and $tags != "" then {tags: ($tags | fromjson)} else {} end)
+                    )
+                  }
+                }')
+
+              curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
+                "$SOLR_URL/solr/$CORE/update?commit=true" \
+                -H "Content-Type: application/json" \
+                -d "$UPDATE_JSON"
+
+              echo "  -> Updated with vdate"
+              VALID_COUNT=$((VALID_COUNT + 1))
+            else
+              echo "  -> HTTP $HTTP_CODE, skipping..."
             fi
           done <<< "$URLS"
 
@@ -354,7 +147,7 @@ jobs:
           echo "========================================"
           echo "Results:"
           echo "  Validated: $VALID_COUNT"
-          echo "  Removed (404/invalid): $DELETE_COUNT"
+          echo "  Removed (404/410): $DELETE_COUNT"
           echo "========================================"
 
           if [ "$DELETE_COUNT" -gt 0 ]; then
