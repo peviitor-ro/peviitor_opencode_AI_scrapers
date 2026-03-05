@@ -2,7 +2,7 @@ name: Remove 404 Jobs
 
 on:
   schedule:
-    - cron: '0 4 * * *'  # Daily at 4 AM
+    - cron: '0 * * * *'  # Every hour
   workflow_dispatch:
 
 jobs:
@@ -69,13 +69,13 @@ jobs:
 
           echo "Fetching jobs to validate (vdate not set or older than $TODAY)..."
           
-          # Get up to 10 jobs (limited for Chrome-based content checking)
+          # Get up to 50 jobs (limited for Chrome-based content checking)
           JOBS_RESPONSE=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
-            "$SOLR_URL/solr/$CORE/select?q=NOT+vdate:*&rows=10&fl=url" \
+            "$SOLR_URL/solr/$CORE/select?q=NOT+vdate:*&rows=50&fl=url" \
             -H "Accept: application/json")
 
           # Extract URLs from response using jq
-          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null | head -10)
+          URLS=$(echo "$JOBS_RESPONSE" | jq -r '.response.docs[].url // empty' 2>/dev/null | head -50)
 
           if [ -z "$URLS" ]; then
             echo "No jobs to validate."
