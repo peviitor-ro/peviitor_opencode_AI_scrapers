@@ -79,7 +79,38 @@ From the job detail page, extract:
    e. Navigate back to the jobs list
 4. **Click Next** or change page parameter to go to next page
 5. **Repeat** until all pages are exhausted (no more "Next" button or reached last page)
-6. **Update websites.md**: Set "Last Scraped" to today's date
+6. **Update Solr company core**: Use atomic upsert to update company with today's date (DO NOT overwrite - use id as unique key):
+
+```bash
+# First, query to check if company exists
+curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:9533457"
+
+# If not found, add new company:
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "9533457",
+    "company": "ENDAVA ROMANIA SRL",
+    "brand": "ENDAVA",
+    "group": "Endava plc",
+    "status": "activ",
+    "website": ["https://www.endava.com"],
+    "career": ["https://www.endava.com/careers"],
+    "lastScraped": "2026-03-05",
+    "scraperFile": "endava.md"
+  }]'
+
+# If found, update lastScraped only (atomic add):
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "9533457",
+    "lastScraped": "2026-03-05",
+    "scraperFile": "endava.md"
+  }]'
+```
+
+**IMPORTANT**: Always use the company's CUI as the `id` field. When updating, only include the fields that need to change - Solr will merge with existing data (atomic update).
 
 ## Solr Schema
 Push to Solr at `http://localhost:8983/solr/job/update` with credentials `solr:SolrRocks`:

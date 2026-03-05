@@ -55,7 +55,38 @@ Example: `https://www.ddroidd.com/careers/service-desk-analyst`
 
 4. **Push to Solr** - see format below
 
-5. **Update websites.md**: Set "Last Scraped" to today's date (format: YYYY-MM-DD)
+5. **Update Solr company core**: Use atomic upsert to update company with today's date (DO NOT overwrite - use id as unique key):
+
+```bash
+# First, query to check if company exists
+curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:40399734"
+
+# If not found, add new company:
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "40399734",
+    "company": "DDROIDD LTD SRL",
+    "brand": "DDROIDD",
+    "group": "-",
+    "status": "activ",
+    "website": ["https://www.ddroidd.com"],
+    "career": ["https://www.ddroidd.com/careers"],
+    "lastScraped": "2026-03-05",
+    "scraperFile": "ddroidd.md"
+  }]'
+
+# If found, update lastScraped only (atomic add):
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "40399734",
+    "lastScraped": "2026-03-05",
+    "scraperFile": "ddroidd.md"
+  }]'
+```
+
+**IMPORTANT**: Always use the company's CUI as the `id` field.
 
 ## Job Data Fields
 

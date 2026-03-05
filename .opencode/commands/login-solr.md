@@ -8,8 +8,8 @@ Open the Solr admin panel in Chrome and login with credentials:
 - Password: SolrRocks
 
 Steps:
-1. First verify Solr is running: curl -s http://localhost:8983/solr/
-2. Navigate Chrome to: http://localhost:8983/solr/
+1. First verify Solr is running: curl -s "https://solr.peviitor.ro/solr/admin/ping"
+2. Navigate Chrome to: https://solr.peviitor.ro/solr/
 3. Fill in the login form with username solr and password SolrRocks
 4. Submit the form and verify successful login
 5. Take a screenshot to confirm

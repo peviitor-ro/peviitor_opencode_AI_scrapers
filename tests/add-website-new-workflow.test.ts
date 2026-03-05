@@ -1,8 +1,7 @@
 import { test, expect } from "@playwright/test";
-import * as fs from "fs";
-import * as path from "path";
 
-const WEBSITES_PATH = path.join(__dirname, "..", "webscraper", "websites.md");
+const SOLR_URL = "https://solr.peviitor.ro/solr/company";
+const SOLR_AUTH = "solr:SolrRocks";
 
 test.describe("add-website command - new workflow", () => {
     const testCompany = "EPAM";
@@ -46,32 +45,39 @@ test.describe("add-website command - new workflow", () => {
         expect(hasCui).toBe(true);
     });
 
-    test("should add company to websites.md with correct format", () => {
-        const originalContent = fs.readFileSync(WEBSITES_PATH, "utf8");
-        
+    test("should add company to Solr with correct format", async () => {
         const testCompanyData = {
-            fullName: "EPAM SYSTEMS INTERNATIONAL SRL",
-            brand: "EPAM",
-            website: "https://epam.com",
-            careersPage: "https://careers.epam.com",
-            cui: "12345678"
+            id: "99999997",
+            company: "TEST COMPANY SOLR SRL",
+            brand: "TESTCOMPANY",
+            group: "Test Group",
+            status: "activ",
+            website: ["https://testcompany.com"],
+            career: ["https://careers.testcompany.com"]
         };
 
-        const lines = originalContent.split("\n");
-        const tableStartIndex = lines.findIndex(line => line.includes("| Company |"));
-        
-        const newRow = `| ${testCompanyData.fullName} | ${testCompanyData.website} | ${testCompanyData.careersPage} | |`;
-        lines.splice(tableStartIndex + 2, 0, newRow);
-        
-        const updatedContent = lines.join("\n");
-        fs.writeFileSync(WEBSITES_PATH, updatedContent);
+        const response = await fetch(`${SOLR_URL}/update/json?commit=true`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify([testCompanyData])
+        });
 
-        const finalContent = fs.readFileSync(WEBSITES_PATH, "utf8");
-        expect(finalContent).toContain(testCompanyData.fullName);
-        expect(finalContent).toContain(testCompanyData.website);
-        expect(finalContent).toContain(testCompanyData.careersPage);
+        expect(response.ok).toBe(true);
 
-        fs.writeFileSync(WEBSITES_PATH, originalContent);
+        const queryResponse = await fetch(
+            `${SOLR_URL}/select?q=id:${testCompanyData.id}`,
+            { headers: { Authorization: "Basic " + btoa(SOLR_AUTH) } }
+        );
+        
+        const queryData = await queryResponse.json();
+        expect(queryData.response.numFound).toBe(1);
+        expect(queryData.response.docs[0].company).toBe(testCompanyData.company);
+
+        await fetch(`${SOLR_URL}/update/json?commit=true`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ delete: { id: testCompanyData.id } })
+        });
     });
 
     test("should verify company website is accessible", async () => {
@@ -81,17 +87,26 @@ test.describe("add-website command - new workflow", () => {
     });
 
     test("should verify careers page is accessible", async () => {
-        const careersUrl = "https://careers.epam.com";
+        const careersUrl = "https://www.epam.com/careers";
         const response = await fetch(careersUrl, { redirect: 'follow' });
         expect(response.status).toBe(200);
     });
 
-    test("websites.md should have correct table structure", () => {
-        const content = fs.readFileSync(WEBSITES_PATH, "utf8");
+    test("Solr company core should have correct fields", async () => {
+        const queryResponse = await fetch(
+            `${SOLR_URL}/select?q=brand:EPAM&rows=1`,
+            { headers: { Authorization: "Basic " + btoa(SOLR_AUTH) } }
+        );
         
-        expect(content).toContain("| Company |");
-        expect(content).toContain("| Website |");
-        expect(content).toContain("| Careers Page |");
-        expect(content).toContain("| Last Scraped |");
+        const queryData = await queryResponse.json();
+        expect(queryData.response.numFound).toBeGreaterThan(0);
+        
+        const doc = queryData.response.docs[0];
+        expect(doc).toHaveProperty("id");
+        expect(doc).toHaveProperty("company");
+        expect(doc).toHaveProperty("brand");
+        expect(doc).toHaveProperty("status");
+        expect(doc).toHaveProperty("website");
+        expect(doc).toHaveProperty("career");
     });
 });

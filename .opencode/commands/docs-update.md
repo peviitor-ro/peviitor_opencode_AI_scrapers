@@ -17,7 +17,7 @@ Project files to review:
 - *.ps1 - PowerShell automation scripts
 - tests/*.test.ts - Playwright test files
 - .opencode/commands/*.md - Command definitions
-- webscraper/websites.md - Company career pages
+- Company data now in Solr company core (query https://solr.peviitor.ro/solr/company/select)
 - SCHEMAS.md - Data schemas
 
 Important Notes:

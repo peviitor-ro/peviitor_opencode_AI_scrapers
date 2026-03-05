@@ -37,9 +37,9 @@ When the user asks to change or add a command:
 
 When the user asks to scrape a company (e.g., `/scrape VODAFONE`):
 
-1. **Check if company exists in websites.md** - Search by brand name OR full company name
+1. **Check if company exists in Solr company core** - Search by brand name OR full company name OR CUI
 2. **If NOT found**: Automatically run `/add-website` with the company name (NO NEED TO ASK USER)
-3. **After adding**: Re-read websites.md and continue with scraping
+3. **After adding**: Re-query Solr company core and continue with scraping
 4. **Proceed with scraping** using company-specific prompt if available
 
 ## Important Notes
@@ -58,4 +58,4 @@ When the user asks to scrape a company (e.g., `/scrape VODAFONE`):
 - Tests are in `tests/` directory
 - Documentation in `docs/` directory
 - Commands in `.opencode/commands/` directory
-- Company careers pages in `webscraper/websites.md`
+- Company data is stored in Solr company core

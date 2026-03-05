@@ -49,7 +49,7 @@ Our mission is to help people find jobs from hundreds of companies through our f
 | Command | Description |
 |---------|-------------|
 | `/scrape [company]` | Scrape jobs from a company |
-| `/add-website` | Add new company to websites.md |
+| `/add-website` | Add new company to Solr company core |
 | `/remove-404` | Validate job URLs and remove inactive |
 | `/update-solr` | Update Solr with new data |
 | `/delete-solr` | Delete jobs from Solr |

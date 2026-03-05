@@ -7,7 +7,7 @@ agent: build
 **ALWAYS use credentials when pushing to Solr:**
 - Username: `solr`
 - Password: `SolrRocks`
-- Example: `curl -u solr:SolrRocks "http://localhost:8983/solr/job/update/json?commit=true"`
+- Example: `curl -u solr:SolrRocks "https://solr.peviitor.ro/solr/job/update/json?commit=true"`
 
 ---
 
@@ -16,7 +16,7 @@ Update the Solr index with new job or company data.
 ## Workflow
 
 ### Step 1: Verify Solr is Running
-1. Check Solr status: `curl -s http://localhost:8983/solr/admin/ping`
+1. Check Solr status: `curl -s "https://solr.peviitor.ro/solr/admin/ping"`
 2. If not running, start it: `docker start peviitor-solr`
 3. Wait for Solr to be ready (port 8983 accessible)
 
@@ -28,11 +28,12 @@ Update the Solr index with new job or company data.
 
 ### Step 3: Push to Solr
 1. Use the correct core:
-   - Job data: `/solr/job/update`
-   - Company data: `/solr/company/update`
+   - Job data: `/solr/job/update/json?commit=true`
+   - Company data: `/solr/company/update/json?commit=true`
 2. Use curl with credentials: `-u solr:SolrRocks`
 3. Set Content-Type: `-H "Content-Type: application/json"`
 4. Add `commit=true` to immediately commit changes
+5. Use atomic upsert for company data - Solr will merge if id already exists
 
 ### Step 4: Verify Update
 1. Query Solr to confirm documents were added
@@ -43,20 +44,43 @@ Update the Solr index with new job or company data.
 ### Add job documents:
 ```bash
 curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
-  "http://localhost:8983/solr/job/update?commit=true" \
+  "https://solr.peviitor.ro/solr/job/update/json?commit=true" \
   -d '[{"url":"https://example.com/job","title":"Software Engineer","company":"Example SRL","status":"scraped","date":"2026-02-19T00:00:00Z"}]'
 ```
 
-### Add company documents:
+### Add company documents (with all fields):
 ```bash
 curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
-  "http://localhost:8983/solr/company/update?commit=true" \
-  -d '[{"id":"12345678","company":"Example SRL","status":"activ","website":["https://example.com"],"career":["https://example.com/careers"]}]'
+  "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -d '[{
+    "id": "12345678",
+    "company": "Example SRL",
+    "brand": "EXAMPLE",
+    "group": "Example Group",
+    "status": "activ",
+    "website": ["https://example.com"],
+    "career": ["https://example.com/careers"],
+    "lastScraped": "2026-03-05",
+    "scraperFile": "example.md"
+  }]'
+```
+
+### Update existing company (atomic upsert):
+```bash
+# Just update lastScraped - other fields remain unchanged
+curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+  "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -d '[{
+    "id": "12345678",
+    "lastScraped": "2026-03-05",
+    "scraperFile": "example.md"
+  }]'
 ```
 
 ### Query to verify:
 ```bash
-curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=company:Example%20SRL"
+curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/job/select?q=company:Example%20SRL"
+curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:12345678"
 ```
 
 ## Important Notes
@@ -67,3 +91,5 @@ curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=company:Examp
 - Follow Job/Company schema from SCHEMAS.md
 - Use Romanian diacritics where required (ăâîșț)
 - Tags should be lowercase, no diacritics
+- For company data, use atomic upsert - Solr will merge fields if id already exists
+- Always use company's CUI as the `id` field

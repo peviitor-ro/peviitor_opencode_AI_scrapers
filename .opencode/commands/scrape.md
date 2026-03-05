@@ -7,7 +7,7 @@ agent: build
 **ALWAYS use credentials when pushing to Solr:**
 - Username: `solr`
 - Password: `SolrRocks`
-- Example: `curl -u solr:SolrRocks "http://localhost:8983/solr/job/update/json?commit=true"`
+- Example: `curl -u solr:SolrRocks "https://solr.peviitor.ro/solr/job/update/json?commit=true"`
 
 ---
 
@@ -30,12 +30,13 @@ Scrape jobs from a company's career page and add them to Solr.
 3. **IF found**: Read the file and follow the scraping instructions inside
 4. **IF NOT found**: Continue with steps below
 
-### Step 2: Check websites.md
-5. Check if company exists in webscraper/websites.md
-   - Search by brand name OR full company name
-   - Search by CUI if provided
-6. If NOT found, automatically run /add-website with the company name
-7. Once company is in websites.md, get the Careers Page URL
+### Step 2: Check Company in Solr
+5. Query Solr company core to find the company:
+   - Search by brand: `https://solr.peviitor.ro/solr/company/select?q=brand:EPAM`
+   - Search by company name: `https://solr.peviitor.ro/solr/company/select?q=company:EPAM%20SYSTEMS`
+   - Search by CUI: `https://solr.peviitor.ro/solr/company/select?q=id:33159615`
+6. If NOT found in Solr, run `/add-website` with the company name
+7. Once company is found in Solr, get the career URL from the `career` field
 8. Navigate to the career page
 9. Filter for Romanian jobs only (jobs that can be worked from Romania)
 10. Extract job data according to Job Model Schema (see SCHEMAS.md)
@@ -54,7 +55,7 @@ Each company prompt file should contain:
 
 See existing examples:
 - `webscraper/epam.md` - Example of EPAM careers scraping
-- `webscraper/endava.md` - Example of SmartRecruiters scraping
+- `webscraper/endava of SmartRecruit.md` - Exampleers scraping
 
 Usage:
 - Scrape company: /scrape EPAM
@@ -63,13 +64,27 @@ Usage:
 Arguments:
 - Company brand name or full company name (e.g., "EPAM", "Endava", "ENDAVA ROMANIA SRL")
 
+## Company Model Schema (from peviitor_core):
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string | Yes | CIF/CUI (8 digits) |
+| company | string | Yes | Legal company name (diacritics REQUIRED) |
+| brand | string | No | Commercial brand name (e.g. "ORANGE", "EPAM") |
+| group | string | No | Parent company group (e.g. "Orange Group") |
+| status | string | No | "activ", "suspendat", "inactiv", "radiat" |
+| location | string[] | No | Romanian cities, DIACRITICS ACCEPTED |
+| website | string[] | No | Official website URL(s) |
+| career | string[] | No | Career page URL(s) |
+| lastScraped | string | No | Date of last scrape (e.g. "2026-02-20") |
+| scraperFile | string | No | Name of scraper file (e.g. "epam.md") |
+
 Job Model Schema (from SCHEMAS.md):
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | url | string | Yes | Full URL to job detail page |
 | title | string | Yes | Position title (max 200 chars, no HTML, diacritics OK) |
 | company | string | No | Legal company name (diacritics REQUIRED) |
-| cif | string | No | CUI/CIF from websites.md |
+| cif | string | No | CUI/CIF from company.id |
 | location | string[] | No | Romanian cities (diacritics OK), multi-valued |
 | tags | string[] | No | Skills, education, experience (lowercase, no diacritics) |
 | workmode | string | No | "remote", "on-site", "hybrid" |
@@ -80,46 +95,93 @@ Job Model Schema (from SCHEMAS.md):
 
 Workflow:
 1. Parse company name from /scrape arguments
-2. Search websites.md for company:
-   - Match against "Company" column (full name)
-   - Match against brand name (if known)
-   - Match against CUI
-3. If not found:
+2. Query Solr company core to find company:
+   - Try by brand: `curl -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=brand:COMPANY_NAME"`
+   - Try by company name: `curl -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=company:COMPANY_NAME"`
+   - Try by CUI if provided
+3. If not found in Solr:
    - Run /add-website with the company name
-   - Re-read websites.md to get updated data
-4. Get Careers Page URL from websites.md
-5. Navigate to career page using Chrome DevTools MCP
-6. Find jobs that can be worked from Romania:
+   - Re-query Solr to get updated data
+4. Get company data from Solr response:
+   - id (CUI)
+   - company (full legal name)
+   - brand
+   - group
+   - website[]
+   - career[]
+5. Push company to Solr company core FIRST (before jobs):
+   - Use curl to POST to https://solr.peviitor.ro/solr/company/update/json?commit=true
+   - Credentials: solr:SolrRocks
+   - Format: JSON with id, company, brand, group, status="activ", website[], career[]
+   - This ensures company exists before jobs are added
+6. Get career URL from Solr company.career array
+7. Navigate to career page using Chrome DevTools MCP
+8. Find jobs that can be worked from Romania:
    - Look for "Romania" location filters
    - Filter out jobs requiring other countries only
    - Include: "Romania", "București", "Cluj-Napoca", "remote Romania", etc.
-7. Extract each job:
-     - url: full URL to job detail
-     - title: job title
-     - company: from websites.md (full legal name)
-     - cif: from websites.md (CUI column)
-     - location: Romanian cities only
-     - tags: skills, education, experience (lowercase, no diacritics)
-     - workmode: "remote", "on-site", or "hybrid"
-     - date: current date in ISO8601
-     - status: "scraped"
-     - salary: if available
-     - expirationdate: try to extract from job page (look for "apply by", "expires", "valid until", etc.)
-8. Push to Solr:
-   - Use curl command to POST to http://localhost:8983/solr/job/update
-   - Credentials: solr:SolrRocks
-   - Format: JSON array of job documents
-9. Verify insertion:
-   - Query Solr for inserted jobs by url
-   - Confirm count matches
+9. Extract each job:
+   - url: full URL to job detail
+   - title: job title
+   - company: from Solr company.company
+   - cif: from Solr company.id
+   - location: Romanian cities only
+   - tags: skills, education, experience (lowercase, no diacritics)
+   - workmode: "remote", "on-site", or "hybrid"
+   - date: current date in ISO8601
+   - status: "scraped"
+   - salary: if available
+   - expirationdate: try to extract from job page (look for "apply by", "expires", "valid until", etc.)
+10. Push to Solr:
+    a. Company core (ALWAYS do this first):
+       - Use curl to POST to https://solr.peviitor.ro/solr/company/update/json?commit=true
+       - Credentials: solr:SolrRocks
+       - Format (use atomic upsert - Solr will merge if id exists):
+         [{
+           "id": "33159615",
+           "company": "EPAM SYSTEMS INTERNATIONAL SRL",
+           "brand": "EPAM",
+           "group": "EPAM Systems",
+           "status": "activ",
+           "website": ["https://www.epam.com"],
+           "career": ["https://www.epam.com/careers/locations/romania"],
+           "lastScraped": "2026-03-05",
+           "scraperFile": "epam.md"
+         }]
+       - If company exists, you can just update lastScraped:
+         [{
+           "id": "33159615",
+           "lastScraped": "2026-03-05",
+           "scraperFile": "epam.md"
+         }]
+    b. Job core:
+       - Use curl to POST to https://solr.peviitor.ro/solr/job/update/json?commit=true
+       - Credentials: solr:SolrRocks
+       - Format: JSON array of job documents
+11. Verify insertion:
+    - Query Solr for inserted company by id
+    - Query Solr for inserted jobs by url
+    - Confirm counts
 
 Example Flow:
 1. User runs: /scrape EPAM
-2. AI checks websites.md for "EPAM" or "EPAM SYSTEMS INTERNATIONAL SRL"
-3. Found! Careers: https://www.epam.com/careers/locations/romania
-4. AI navigates to career page
-5. AI filters for Romania jobs only
-6. AI extracts job data:
+2. AI queries Solr: https://solr.peviitor.ro/solr/company/select?q=brand:EPAM
+3. Found! career: https://www.epam.com/careers/locations/romania
+4. AI pushes company to Solr company core (atomic upsert):
+   [{
+     "id": "33159615",
+     "company": "EPAM SYSTEMS INTERNATIONAL SRL",
+     "brand": "EPAM",
+     "group": "EPAM Systems",
+     "status": "activ",
+     "website": ["https://www.epam.com"],
+     "career": ["https://www.epam.com/careers/locations/romania"],
+     "lastScraped": "2026-03-05",
+     "scraperFile": "epam.md"
+   }]
+5. AI navigates to career page
+6. AI filters for Romania jobs only
+7. AI extracts job data:
    [
      {
        "url": "https://www.epam.com/careers/job/12345",
@@ -135,16 +197,20 @@ Example Flow:
        "expirationdate": "2026-03-17T00:00:00Z"
      }
    ]
-7. AI pushes to Solr
-8. AI verifies documents exist
+8. AI pushes jobs to Solr job core
+9. AI verifies both company and jobs exist in Solr
 
 Note:
 - ALWAYS use Chrome DevTools MCP for scraping (requires Chrome with remote debugging)
 - Run start-chrome.ps1 first if Chrome is not running with debug port
 - ONLY scrape jobs that can be worked from Romania - exclude jobs in other countries
-- Use CUI from websites.md for the "cif" field
-- Use full legal company name from websites.md for "company" field
-- After scraping, update "Last Scraped" column in websites.md with today's date
+- Use CUI from Solr company.id for the "cif" field
+- Use full legal company name from Solr company.company for "company" field
+- ALWAYS push company to Solr company core BEFORE pushing jobs
+- Use "activ" as default status for new companies
+- After scraping, update "lastScraped" and "scraperFile" fields in Solr company core with today's date (format: YYYY-MM-DD)
+- Solr uses atomic upsert - if company id exists, it will merge fields (not overwrite)
+- When updating existing company, you can just send the fields you want to update (e.g., lastScraped)
 - Try to extract expirationdate from job page (look for "apply by", "expires", "valid until", "deadline" text). If found, parse the date and convert to ISO8601. If not found, leave empty.
 
 CRITICAL - AUTOMATIC PAGINATION:

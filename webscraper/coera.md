@@ -59,7 +59,38 @@ Example: `https://jobs.smartrecruiters.com/COERA/743999680007137-go-beyond-for-y
 
 6. **Push to Solr** - see format below
 
-7. **Update websites.md**: Set "Last Scraped" to today's date (format: YYYY-MM-DD)
+7. **Update Solr company core**: Use atomic upsert to update company with today's date (DO NOT overwrite - use id as unique key):
+
+```bash
+# First, query to check if company exists
+curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:32519996"
+
+# If not found, add new company:
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "32519996",
+    "company": "COERA BC SRL",
+    "brand": "COERA",
+    "group": "-",
+    "status": "activ",
+    "website": ["https://www.co-era.com"],
+    "career": ["https://www.co-era.com/careers"],
+    "lastScraped": "2026-03-05",
+    "scraperFile": "coera.md"
+  }]'
+
+# If found, update lastScraped only (atomic add):
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "32519996",
+    "lastScraped": "2026-03-05",
+    "scraperFile": "coera.md"
+  }]'
+```
+
+**IMPORTANT**: Always use the company's CUI as the `id` field.
 
 ## Job Data Fields
 

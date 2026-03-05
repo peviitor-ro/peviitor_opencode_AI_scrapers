@@ -26,7 +26,7 @@ peviitor_opencode_AI_scrapers/
 ├── README.md             # Project README
 ├── .github/              # GitHub templates
 ├── webscraper/            # Web scraping data
-│   ├── websites.md        # Companies and their careers pages
+│   ├── websites.md        # Companies and their careers pages (DEPRECATED - now in Solr company core)
 │   ├── *.md               # Company-specific scraping prompts
 ├── docs/                  # HTML documentation
 │   ├── index.html
@@ -256,7 +256,7 @@ Custom commands are defined in `.opencode/commands/` directory.
 | Command | Description |
 |---------|-------------|
 | `/scrape` | Scrape jobs from a company career page and push to Solr |
-| `/add-website` | Add a new company to websites.md with automatic research |
+| `/add-website` | Add a new company to Solr company core with automatic research |
 | `/update-solr` | Update Solr with new data |
 | `/delete-solr` | Delete job documents from Solr by key |
 | `/login-solr` | Login to Solr admin panel |
@@ -300,4 +300,4 @@ Custom commands are defined in `.opencode/commands/` directory.
 - **IMPORTANT**: Before using Chrome DevTools MCP, always run `start-chrome.ps1` first to ensure Chrome is started with remote debugging enabled
 - **IMPORTANT**: Always use the correct Solr delete-by-query format: `{"delete":{"query":"url:\"https://example.com/job\""}}` - do NOT use `_delete_:true` format
 - Company-specific scraping instructions are stored in `webscraper/{company}.md` files
-- The `webscraper/websites.md` file contains all companies with their CUI, website, and careers page URLs
+- Company data is stored in Solr company core - query using brand, company name, or CUI

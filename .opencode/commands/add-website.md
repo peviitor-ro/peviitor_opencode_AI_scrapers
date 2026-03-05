@@ -1,9 +1,9 @@
 ---
-description: Add a new company website to websites.md with automatic research
+description: Add a new company to Solr company core with automatic research
 agent: build
 ---
 
-Add a new company to the websites.md file by automatically researching company details online.
+Add a new company to the Solr company core by automatically researching company details online.
 
 Steps:
 1. Parse the company name from arguments (e.g., "EPAM")
@@ -16,13 +16,27 @@ Steps:
 5. Search for the company's official website
 6. Find the company's careers/jobs page
 7. Verify all data with the user before saving
-8. Add the company to websites.md with CUI column
+8. Add the company to Solr company core with all required fields
 
 Usage:
 - Add a company: /add-website EPAM
 
 Arguments:
 - Company brand name (e.g., "EPAM", "Amazon", "Softlead")
+
+## Company Model Schema (for Solr):
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string | Yes | CIF/CUI (8 digits) |
+| company | string | Yes | Legal company name (diacritics REQUIRED) |
+| brand | string | No | Commercial brand name |
+| group | string | No | Parent company group |
+| status | string | No | "activ", "suspendat", "inactiv", "radiat" |
+| location | string[] | No | Romanian cities |
+| website | string[] | No | Official website URL(s) |
+| career | string[] | No | Career page URL(s) |
+| lastScraped | string | No | Date of last scrape (leave empty for new) |
+| scraperFile | string | No | Name of scraper file |
 
 Workflow:
 1. Search for CUI using WebSearch: "COMPANY NAME Romania CUI"
@@ -34,9 +48,30 @@ Workflow:
    - Brand name
    - Website URL
    - Careers page URL
-   - CUI/CIF (REQUIRED - must be saved to websites.md)
-6. Ask user: "Is this data correct? Should I save it to websites.md?"
+   - CUI/CIF (REQUIRED - will be saved to Solr)
+   - Group (if applicable)
+6. Ask user: "Is this data correct? Should I save it to Solr?"
 7. Only save after user confirmation
+
+## Solr Update Command:
+To add company to Solr, use atomic upsert (this will add if not exists, or merge if exists):
+```bash
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "33159615",
+    "company": "EPAM SYSTEMS INTERNATIONAL SRL",
+    "brand": "EPAM",
+    "group": "EPAM Systems",
+    "status": "activ",
+    "website": ["https://www.epam.com"],
+    "career": ["https://www.epam.com/careers/locations/romania"],
+    "lastScraped": "",
+    "scraperFile": "epam.md"
+  }]'
+```
+
+**Note**: Solr automatically performs atomic update - if the company id already exists, it will merge the fields (not overwrite). Only include fields you want to update.
 
 Data Collection:
 - Use WebSearch to find CUI: "COMPANY NAME Romania CUI"
@@ -60,10 +95,10 @@ How to Extract Data from targetare.ro:
 4. For careers page, search: "COMPANY careers Romania"
 
 Note:
-- ALWAYS save CUI/CIF to websites.md - this is REQUIRED
-- The websites.md table has a CUI column - use it
+- ALWAYS save company to Solr company core - this is REQUIRED
+- Use "activ" as default status for new companies
 - Run start-chrome.ps1 first if Chrome is not running with debug port
-- The Last Scraped column will be left empty for new entries
+- The lastScraped field will be left empty for new entries
 - Do NOT overwrite existing entries - only add new ones
 - Verify all URLs are working before proposing to save
 - Check company status on targetare.ro - if status is "suspendat", "inactiv", or "radiat", warn the user (according to Company Model Schema, non-active companies should have their jobs removed)
@@ -80,5 +115,15 @@ Example Flow:
    - Website: https://www.epam.com
    - Careers: https://www.epam.com/careers/locations/romania
    - CUI: 33159615
+   - Group: EPAM Systems
 7. User confirms: "Yes, save it"
-8. AI adds the company to websites.md with CUI column
+8. AI adds the company to Solr company core:
+   [{
+     "id": "33159615",
+     "company": "EPAM SYSTEMS INTERNATIONAL SRL",
+     "brand": "EPAM",
+     "group": "EPAM Systems",
+     "status": "activ",
+     "website": ["https://www.epam.com"],
+     "career": ["https://www.epam.com/careers/locations/romania"]
+   }]

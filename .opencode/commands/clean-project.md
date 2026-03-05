@@ -32,7 +32,7 @@ Delete the following temporary files that are not needed:
 ### Files to KEEP:
 - `start-chrome.ps1` - needed to start Chrome with remote debugging
 - `webscraper/` - company scraping prompts
-- `webscraper/websites.md` - list of companies
+- Company data now in Solr company core (no longer in websites.md)
 - `docs/` - HTML documentation
 - `tests/*.test.ts` - test files
 - `tests/package.json` - test dependencies
@@ -49,7 +49,7 @@ Delete the following temporary files that are not needed:
 Read all files in the project and update the HTML documentation in `docs/` folder:
 
 1. Read `SCHEMAS.md` and update `docs/schemas.html`
-2. Read `webscraper/websites.md` and update relevant docs
+2. Query Solr company core and update relevant docs
 3. Read `.opencode/commands/*.md` files and update `docs/commands.html`
 4. Read `AGENTS.md` and update `docs/setup.html`
 5. Read `INSTRUCTIONS.md` and update `docs/index.html` or create new section

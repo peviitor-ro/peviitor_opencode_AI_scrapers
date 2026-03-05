@@ -64,7 +64,38 @@ Example: `https://careers.epam.com/en/vacancy/senior-full-stack-abap-ui5-develop
 
 5. **Repeat** until all 9 pages are exhausted
 
-6. **Update websites.md**: Set "Last Scraped" to today's date (format: YYYY-MM-DD)
+6. **Update Solr company core**: Use atomic upsert to update company with today's date (DO NOT overwrite - use id as unique key):
+
+```bash
+# First, query to check if company exists
+curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:33159615"
+
+# If not found, add new company:
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "33159615",
+    "company": "EPAM SYSTEMS INTERNATIONAL SRL",
+    "brand": "EPAM",
+    "group": "EPAM Systems",
+    "status": "activ",
+    "website": ["https://www.epam.com"],
+    "career": ["https://www.epam.com/careers/locations/romania"],
+    "lastScraped": "2026-03-05",
+    "scraperFile": "epam.md"
+  }]'
+
+# If found, update lastScraped only (atomic add):
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "33159615",
+    "lastScraped": "2026-03-05",
+    "scraperFile": "epam.md"
+  }]'
+```
+
+**IMPORTANT**: Always use the company's CUI as the `id` field. When updating, only include the fields that need to change - Solr will merge with existing data (atomic update).
 
 ## Job Data Fields
 

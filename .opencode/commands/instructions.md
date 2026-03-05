@@ -25,4 +25,4 @@ Project Context:
 - Tests are in `tests/` directory
 - Documentation in `docs/` directory
 - Commands in `.opencode/commands/` directory
-- Company careers pages in `webscraper/websites.md`
+- Company data is stored in Solr company core (query https://solr.peviitor.ro/solr/company/select)

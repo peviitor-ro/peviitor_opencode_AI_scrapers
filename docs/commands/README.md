@@ -7,7 +7,7 @@ Available OpenCode commands for job scraping automation.
 - [/scrape](#scrape) - Run scraper for a company
 - [/update-solr](#update-solr) - Update Solr with new data
 - [/delete-solr](#delete-solr) - Delete job documents from Solr
-- [/add-website](#add-website) - Add a company to websites.md
+- [/add-website](#add-website) - Add a company to Solr company core
 - [/login-solr](#login-solr) - Login to Solr admin panel
 - [/docs-update](#docs-update) - Update project documentation
 - [/instructions](#instructions) - Follow workflow for adding/changing commands
@@ -28,17 +28,34 @@ Scrape jobs from a company's career page and push to Solr.
 ### Steps
 
 1. Parse company name from arguments
-2. Check if company exists in `webscraper/websites.md`
-   - Search by brand name OR full company name
-   - Search by CUI
+2. Query Solr company core to find company:
+   - Search by brand: `https://solr.peviitor.ro/solr/company/select?q=brand:EPAM`
+   - Search by company name
+   - Search by CUI (id)
 3. If NOT found, automatically run `/add-website` first
-4. Get Careers Page URL from websites.md
+4. Get career URL from Solr company.career field
 5. Navigate to career page (using Chrome DevTools MCP)
 6. Filter for Romanian jobs only
 7. Extract job data according to Job Model Schema
-8. Push documents to Solr
-9. Verify documents were inserted
-10. Update "Last Scraped" column in websites.md
+8. Push company to Solr company core first (if not exists)
+9. Push jobs to Solr job core
+10. Verify documents were inserted
+11. Update "lastScraped" field in Solr company core
+
+### Company Model Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string | Yes | CIF/CUI (8 digits) |
+| company | string | Yes | Legal company name (diacritics REQUIRED) |
+| brand | string | No | Commercial brand name |
+| group | string | No | Parent company group |
+| status | string | No | "activ", "suspendat", "inactiv", "radiat" |
+| location | string[] | No | Romanian cities |
+| website | string[] | No | Official website URL(s) |
+| career | string[] | No | Career page URL(s) |
+| lastScraped | string | No | Date of last scrape |
+| scraperFile | string | No | Name of scraper file |
 
 ### Job Model Schema
 
@@ -47,7 +64,7 @@ Scrape jobs from a company's career page and push to Solr.
 | url | string | Yes | Full URL to job detail page |
 | title | string | Yes | Position title (max 200 chars) |
 | company | string | No | Legal company name (diacritics REQUIRED) |
-| cif | string | No | CUI/CIF from websites.md |
+| cif | string | No | CUI/CIF from company.id |
 | location | string[] | No | Romanian cities, multi-valued |
 | tags | string[] | No | Skills, education, experience |
 | workmode | string | No | "remote", "on-site", "hybrid" |
@@ -59,20 +76,22 @@ Scrape jobs from a company's career page and push to Solr.
 ### Important
 
 - ONLY scrape jobs that can be worked from Romania
-- Use CUI from websites.md for "cif" field
-- Use full legal company name from websites.md for "company" field
+- Use CUI from Solr company.id for "cif" field
+- Use full legal company name from Solr company.company for "company" field
 - Run start-chrome.ps1 first if Chrome is not running
+- ALWAYS push company to Solr company core BEFORE pushing jobs
 
 ### Example Flow
 
 ```
 User: /scrape EPAM
-AI: Checking websites.md for EPAM...
-AI: Found! Careers: https://www.epam.com/careers/locations/romania
+AI: Querying Solr company core for EPAM...
+AI: Found! career: https://www.epam.com/careers/locations/romania
+AI: Pushing company to Solr company core...
 AI: Navigating to career page, filtering Romania jobs...
-AI: Extracted 5 jobs, pushing to Solr...
+AI: Extracted 5 jobs, pushing to Solr job core...
 AI: Verified 5 jobs in Solr
-AI: Updated Last Scraped in websites.md
+AI: Updated lastScraped in Solr company core
 Done!
 ```
 
@@ -98,8 +117,8 @@ Update Solr index with new job or company data.
 
 ```bash
 curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
-  'http://localhost:8983/solr/job/update?commit=true' \
-  -d '[{"url":"https://example.com/job","title":"Software Engineer","company":"Test Company"}]'
+  'https://solr.peviitor.ro/solr/company/update/json?commit=true' \
+  -d '[{"id":"33159615","company":"EPAM SYSTEMS INTERNATIONAL SRL","brand":"EPAM","status":"activ"}]'
 ```
 
 ---
@@ -126,7 +145,7 @@ Delete job documents from Solr by key.
 
 ```bash
 curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
-  'http://localhost:8983/solr/job/update?commit=true' \
+  'https://solr.peviitor.ro/solr/job/update/json?commit=true' \
   -d '{"delete":{"query":"url:\"https://example.com/job\""}}'
 ```
 
@@ -134,7 +153,7 @@ curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
 
 ## /add-website
 
-Add a new company to `webscraper/websites.md` with automatic research.
+Add a new company to Solr company core with automatic research.
 
 ### Usage
 
@@ -152,36 +171,53 @@ Add a new company to `webscraper/websites.md` with automatic research.
 3. Search for company's official website
 4. Find company's careers/jobs page
 5. Present data to user for verification
-6. Save only after user confirmation
+6. Save to Solr company core after user confirmation
 
 ### Data Collected
 
 | Field | Description |
 |-------|-------------|
-| Full Company Name | Legal name from targetare.ro (e.g., "EPAM SYSTEMS INTERNATIONAL SRL") |
-| Brand | Company brand name (e.g., "EPAM") |
-| Website | Official company website |
-| Careers Page | Company jobs/careers page |
-| CUI/CIF | Romanian fiscal code (from targetare.ro) |
+| id | CUI/CIF from targetare.ro |
+| company | Legal name from targetare.ro |
+| brand | Company brand name |
+| website | Official company website |
+| career | Company jobs/careers page |
+| status | Default: "activ" |
 
 ### Example Flow
 
 ```
 User: /add-website EPAM
 AI: Searching targetare.ro for EPAM...
-AI: Found: EPAM SYSTEMS INTERNATIONAL SRL, CUI: 18942350
-AI: Found website: https://epam.com
-AI: Found careers: https://careers.epam.com
+AI: Found: EPAM SYSTEMS INTERNATIONAL SRL, CUI: 33159615
+AI: Found website: https://www.epam.com
+AI: Found careers: https://www.epam.com/careers/locations/romania
 
 Is this data correct?
 - Full Name: EPAM SYSTEMS INTERNATIONAL SRL
 - Brand: EPAM
-- Website: https://epam.com
-- Careers: https://careers.epam.com
-- CUI: 18942350
+- Website: https://www.epam.com
+- Careers: https://www.epam.com/careers/locations/romania
+- CUI: 33159615
 
 User: Yes, save it
-AI: Adding to websites.md... Done!
+AI: Adding to Solr company core... Done!
+```
+
+### Solr Command
+
+```bash
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "33159615",
+    "company": "EPAM SYSTEMS INTERNATIONAL SRL",
+    "brand": "EPAM",
+    "group": "EPAM Systems",
+    "status": "activ",
+    "website": ["https://www.epam.com"],
+    "career": ["https://www.epam.com/careers/locations/romania"]
+  }]'
 ```
 
 ### Prerequisites
@@ -194,7 +230,7 @@ AI: Adding to websites.md... Done!
 - Uses Chrome DevTools MCP for web browsing (bypasses anti-bot protections)
 - Always verifies data with user before saving
 - Does NOT overwrite existing entries
-- Last Scraped column left empty for new entries
+- lastScraped field left empty for new entries
 
 ---
 
@@ -216,7 +252,7 @@ Open Solr admin panel in Chrome and login.
 ### URL
 
 ```
-http://localhost:8983/solr/
+https://solr.peviitor.ro/solr/
 ```
 
 ---
@@ -275,4 +311,4 @@ This is a meta-command that defines the workflow for adding or changing other co
 - Tests: `tests/` directory
 - Documentation: `docs/` directory
 - Commands: `.opencode/commands/` directory
-- Company careers pages: `webscraper/websites.md`
+- Company data: Solr company core (https://solr.peviitor.ro/solr/company/select)

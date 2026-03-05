@@ -1,29 +1,39 @@
 import { test, expect } from "@playwright/test";
-import * as fs from "fs";
-import * as path from "path";
 
-const WEBSITES_PATH = path.join(__dirname, "..", "webscraper", "websites.md");
+const SOLR_URL = "https://solr.peviitor.ro/solr/company";
+const SOLR_AUTH = "solr:SolrRocks";
 
-test("add-website command works - adds company to websites.md", () => {
-    const testCompany = "TEST COMPANY ADD WEBSITE";
-    const testWebsite = "https://testbrand.com";
-    const testCareers = "https://careers.testbrand.com";
+test("add-website command works - adds company to Solr", async () => {
+    const testCompany = {
+        id: "99999998",
+        company: "TEST COMPANY ADD WEBSITE SRL",
+        brand: "TESTBRAND",
+        group: "Test Group",
+        status: "activ",
+        website: ["https://testbrand.com"],
+        career: ["https://careers.testbrand.com"]
+    };
 
-    const originalContent = fs.readFileSync(WEBSITES_PATH, "utf8");
+    const response = await fetch(`${SOLR_URL}/update/json?commit=true`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([testCompany])
+    });
 
-    const lines = originalContent.split("\n");
-    const tableStartIndex = lines.findIndex(line => line.includes("| Company |"));
+    expect(response.ok).toBe(true);
+
+    const queryResponse = await fetch(
+        `${SOLR_URL}/select?q=id:${testCompany.id}`,
+        { headers: { Authorization: "Basic " + btoa(SOLR_AUTH) } }
+    );
     
-    const newRow = `| ${testCompany} | ${testWebsite} | ${testCareers} | |`;
-    lines.splice(tableStartIndex + 2, 0, newRow);
-    
-    const updatedContent = lines.join("\n");
-    fs.writeFileSync(WEBSITES_PATH, updatedContent);
+    const queryData = await queryResponse.json();
+    expect(queryData.response.numFound).toBe(1);
+    expect(queryData.response.docs[0].company).toBe(testCompany.company);
 
-    const finalContent = fs.readFileSync(WEBSITES_PATH, "utf8");
-    expect(finalContent).toContain(testCompany);
-    expect(finalContent).toContain(testWebsite);
-    expect(finalContent).toContain(testCareers);
-
-    fs.writeFileSync(WEBSITES_PATH, originalContent);
+    await fetch(`${SOLR_URL}/update/json?commit=true`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delete: { id: testCompany.id } })
+    });
 });

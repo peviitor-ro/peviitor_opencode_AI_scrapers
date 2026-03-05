@@ -14,7 +14,7 @@ This project automates job data scraping from peviitor.ro platform. It uses:
 
 - [Commands](commands/README.md) - Available OpenCode commands
 - [Schemas](../SCHEMAS.md) - Job and Company data models
-- [Websites](../webscraper/websites.md) - Tracked company career pages
+- Company data - Now stored in Solr company core (query: https://solr.peviitor.ro/solr/company/select)
 
 ## Quick Start
 

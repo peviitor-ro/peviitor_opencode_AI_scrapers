@@ -68,7 +68,38 @@ Example: `https://careers.nttdata.ro/nttdataromania/job/Cluj-NodeJS-Developer/12
 
 5. **Repeat** until all 4 pages are exhausted
 
-6. **Update websites.md**: Set "Last Scraped" to today's date (format: YYYY-MM-DD)
+6. **Update Solr company core**: Use atomic upsert to update company with today's date (DO NOT overwrite - use id as unique key):
+
+```bash
+# First, query to check if company exists
+curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:13091574"
+
+# If not found, add new company:
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "13091574",
+    "company": "NTT DATA ROMANIA SA",
+    "brand": "NTT DATA",
+    "group": "NTT DATA",
+    "status": "activ",
+    "website": ["https://ro.nttdata.com/"],
+    "career": ["https://careers.nttdata.ro/"],
+    "lastScraped": "2026-03-05",
+    "scraperFile": "ntt-data.md"
+  }]'
+
+# If found, update lastScraped only (atomic add):
+curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "13091574",
+    "lastScraped": "2026-03-05",
+    "scraperFile": "ntt-data.md"
+  }]'
+```
+
+**IMPORTANT**: Always use the company's CUI as the `id` field.
 
 ## Job Data Fields
 
