@@ -54,26 +54,85 @@ jobs:
               continue
             fi
 
+            # URL encode for safety in shell
+            ENCODED_URL=$(printf '%s' "$URL" | jq -Rs .)
+            ENCODED_URL=${ENCODED_URL:1:-1}  # Remove quotes from jq
+
             echo "Checking: $URL"
 
-            # Check HTTP status
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$URL" || echo "000")
+            # Check HTTP status (follow redirects to get final status)
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 -L "$URL" || echo "000")
 
-            if [ "$HTTP_CODE" = "404" ]; then
-              echo "  -> 404, deleting..."
+            if [ "$HTTP_CODE" = "404" ] || [ "$HTTP_CODE" = "410" ]; then
+              echo "  -> $HTTP_CODE, deleting..."
               curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
                 "$SOLR_URL/solr/$CORE/update?commit=true" \
                 -H "Content-Type: application/json" \
                 -d "{\"delete\":{\"query\":\"url:\\\"$URL\\\"\"}}"
               DELETE_COUNT=$((DELETE_COUNT + 1))
               DELETED_URLS="${DELETED_URLS}${URL}"$'\n'
-            elif [ "$HTTP_CODE" = "200" ]; then
-              echo "  -> 200, updating vdate..."
-              # Use atomic update to preserve non-stored fields
+            elif [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+              echo "  -> $HTTP_CODE, fetching existing doc..."
+              
+              # Fetch existing document with all stored fields
+              EXISTING_DOC=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" \
+                "$SOLR_URL/solr/$CORE/select?q=url:\"$URL\"&rows=1" \
+                -H "Accept: application/json")
+
+              # Extract title if exists
+              TITLE=$(echo "$EXISTING_DOC" | grep -oP '"title":"[^"]*"' | head -1 | sed 's/"title":"//;s/"$//')
+              # Extract company if exists  
+              COMPANY=$(echo "$EXISTING_DOC" | grep -oP '"company":"[^"]*"' | head -1 | sed 's/"company":"//;s/"$//')
+              # Extract location if exists
+              LOCATION=$(echo "$EXISTING_DOC" | grep -oP '"location":\[[^\]]*\]' | head -1)
+              # Extract date if exists
+              DATE=$(echo "$EXISTING_DOC" | grep -oP '"date":"[^"]*"' | head -1 | sed 's/"date":"//;s/"$//')
+              # Extract cif if exists
+              CIF=$(echo "$EXISTING_DOC" | grep -oP '"cif":"[^"]*"' | head -1 | sed 's/"cif":"//;s/"$//')
+              # Extract tags if exists
+              TAGS=$(echo "$EXISTING_DOC" | grep -oP '"tags":\[[^\]]*\]' | head -1)
+              # Extract workmode if exists
+              WORKMODE=$(echo "$EXISTING_DOC" | grep -oP '"workmode":"[^"]*"' | head -1 | sed 's/"workmode":"//;s/"$//')
+              # Extract salary if exists
+              SALARY=$(echo "$EXISTING_DOC" | grep -oP '"salary":"[^"]*"' | head -1 | sed 's/"salary":"//;s/"$//')
+
+              # Build atomic update preserving all existing fields
+              UPDATE_DOC="{\"add\":{\"doc\":{\"url\":\"$URL\",\"vdate\":\"${TODAY}T00:00:00Z\",\"status\":\"tested\",\"expirationdate\":\"${EXPIRATION}T00:00:00Z\""
+
+              if [ -n "$TITLE" ]; then
+                UPDATE_DOC="${UPDATE_DOC},\"title\":\"$TITLE\""
+              fi
+              if [ -n "$COMPANY" ]; then
+                UPDATE_DOC="${UPDATE_DOC},\"company\":\"$COMPANY\""
+              fi
+              if [ -n "$LOCATION" ]; then
+                UPDATE_DOC="${UPDATE_DOC},\"location\":$LOCATION"
+              fi
+              if [ -n "$DATE" ]; then
+                UPDATE_DOC="${UPDATE_DOC},\"date\":\"$DATE\""
+              fi
+              if [ -n "$CIF" ]; then
+                UPDATE_DOC="${UPDATE_DOC},\"cif\":\"$CIF\""
+              fi
+              if [ -n "$TAGS" ]; then
+                UPDATE_DOC="${UPDATE_DOC},\"tags\":$TAGS"
+              fi
+              if [ -n "$WORKMODE" ]; then
+                UPDATE_DOC="${UPDATE_DOC},\"workmode\":\"$WORKMODE\""
+              fi
+              if [ -n "$SALARY" ]; then
+                UPDATE_DOC="${UPDATE_DOC},\"salary\":\"$SALARY\""
+              fi
+
+              UPDATE_DOC="${UPDATE_DOC}}}"
+
+              # Send atomic update
               curl -s -u "$SOLR_USER:$SOLR_PASSWD" -X POST \
                 "$SOLR_URL/solr/$CORE/update?commit=true" \
                 -H "Content-Type: application/json" \
-                -d "{\"add\":{\"doc\":{\"url\":\"$URL\",\"vdate\":\"${TODAY}T00:00:00Z\",\"status\":\"tested\",\"expirationdate\":\"${EXPIRATION}T00:00:00Z\"}}}"
+                -d "$UPDATE_DOC"
+
+              echo "  -> Updated with vdate"
               VALID_COUNT=$((VALID_COUNT + 1))
             else
               echo "  -> HTTP $HTTP_CODE, skipping..."
