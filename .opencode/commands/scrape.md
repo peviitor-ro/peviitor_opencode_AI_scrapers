@@ -107,13 +107,16 @@ Workflow:
    - company (full legal name)
    - brand
    - group
-   - website[]
-   - career[]
+   - website[] - **IMPORTANT**: When multiple websites exist, use .ro domains FIRST
+   - career[] - **IMPORTANT**: When multiple careers pages exist, use .ro domains FIRST
+   - If company has both ziramarketing.com and ziramarketing.ro, use ONLY ziramarketing.ro
 5. Push company to Solr company core FIRST (before jobs):
    - Use curl to POST to https://solr.peviitor.ro/solr/company/update/json?commit=true
    - Credentials: solr:SolrRocks
    - Format: JSON with id, company, brand, group, status="activ", website[], career[]
    - This ensures company exists before jobs are added
+   - **IMPORTANT**: When updating website[] or career[] arrays, ALWAYS prioritize .ro domains
+   - Put .ro domains FIRST in arrays: e.g., `["https://www.company.ro", "https://www.company.com"]`
 6. Get career URL from Solr company.career array
 7. Navigate to career page using Chrome DevTools MCP
 8. Find jobs that can be worked from Romania:
@@ -174,7 +177,7 @@ Example Flow:
      "brand": "EPAM",
      "group": "EPAM Systems",
      "status": "activ",
-     "website": ["https://www.epam.com"],
+     "website": ["https://www.epam.com", "https://www.epam.ro"],
      "career": ["https://www.epam.com/careers/locations/romania"],
      "lastScraped": "2026-03-05",
      "scraperFile": "epam.md"
@@ -212,6 +215,7 @@ Note:
 - Solr uses atomic upsert - if company id exists, it will merge fields (not overwrite)
 - When updating existing company, you can just send the fields you want to update (e.g., lastScraped)
 - Try to extract expirationdate from job page (look for "apply by", "expires", "valid until", "deadline" text). If found, parse the date and convert to ISO8601. If not found, leave empty.
+- **IMPORTANT - WEBSITE PRIORITY**: When company has multiple websites/careers pages, ALWAYS prioritize .ro domains and put them FIRST in arrays. Example: use ziramarketing.ro, NOT ziramarketing.com
 
 CRITICAL - AUTOMATIC PAGINATION:
 - The model MUST NOT stop until ALL jobs are collected from ALL pages

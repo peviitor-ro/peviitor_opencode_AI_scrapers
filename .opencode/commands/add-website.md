@@ -13,8 +13,16 @@ Steps:
    - Full legal company name in Romania
    - CUI/CIF (fiscal code) - REQUIRED
    - Registration number
-5. Search for the company's official website
-6. Find the company's careers/jobs page
+5. Search for the company's official website:
+   - **IMPORTANT**: When multiple websites are found, PRIORITIZE .ro domains
+   - First, search for: "COMPANY NAME Romania official website" and look for .ro domains
+   - Only use other TLDs (.com, .eu, etc.) if NO .ro domain exists
+   - A company may have multiple websites - list ALL of them in the website array
+   - Example: If company has both ziramarketing.com and ziramarketing.ro, use only ziramarketing.ro
+6. Find the company's careers/jobs page:
+   - Search for careers page using .ro domain if available
+   - Look for "/careers", "/jobs", "/join-us", "/work-with-us" paths
+   - A company may have multiple careers pages - list ALL of them in the career array
 7. Verify all data with the user before saving
 8. Add the company to Solr company core with all required fields
 
@@ -64,12 +72,18 @@ curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/jso
     "brand": "EPAM",
     "group": "EPAM Systems",
     "status": "activ",
-    "website": ["https://www.epam.com"],
-    "career": ["https://www.epam.com/careers/locations/romania"],
+    "website": ["https://www.epam.com", "https://www.epam.ro"],
+    "career": ["https://www.epam.com/careers/locations/romania", "https://careers.epam.com"],
     "lastScraped": "",
     "scraperFile": "epam.md"
   }]'
 ```
+
+**Important - Website Priority Rules:**
+- website[] and career[] arrays can contain multiple URLs
+- **ALWAYS prioritize .ro domains** over other TLDs
+- Put .ro domains FIRST in the array, then other TLDs
+- Example: `["https://www.company.ro", "https://www.company.com"]`
 
 **Note**: Solr automatically performs atomic update - if the company id already exists, it will merge the fields (not overwrite). Only include fields you want to update.
 
@@ -77,6 +91,9 @@ Data Collection:
 - Use WebSearch to find CUI: "COMPANY NAME Romania CUI"
 - Navigate to targetare.ro direct URL: https://www.targetare.ro/{CUI}/{company-slug}
 - Search Google or company website for careers page
+- **IMPORTANT**: When searching for websites, prioritize .ro domains
+- **ALWAYS put .ro domains first** in website[] and career[] arrays
+- If multiple careers pages exist, include all of them
 - Verify URLs are accessible before presenting
 
 How to Extract Data from targetare.ro:
@@ -102,6 +119,7 @@ Note:
 - Do NOT overwrite existing entries - only add new ones
 - Verify all URLs are working before proposing to save
 - Check company status on targetare.ro - if status is "suspendat", "inactiv", or "radiat", warn the user (according to Company Model Schema, non-active companies should have their jobs removed)
+- **IMPORTANT**: When websites are found, ALWAYS prioritize .ro domains and put them FIRST in arrays
 
 Example Flow:
 1. User runs: /add-website EPAM
