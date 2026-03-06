@@ -66,6 +66,10 @@ jobs:
           SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
         run: |
           set +x
+          
+          # Save list of existing files before scraping
+          ls -la webscraper/ > /tmp/before_scrape.txt
+          
           opencode run "
           You are running in GitHub Actions. You have access to Chrome DevTools MCP connected to Chrome on port 9222.
 
@@ -73,6 +77,7 @@ jobs:
           - Use SOLR_USER and SOLR_PASSWD environment variables for authentication.
           - Solr URL is: https://solr.peviitor.ro
           - Push jobs to: https://solr.peviitor.ro/job/update/json?commit=true
+          - Company core: https://solr.peviitor.ro/solr/company/update/json?commit=true
           - Example: curl -u \"\$SOLR_USER:\$SOLR_PASSWD\" -X POST -H \"Content-Type: application/json\" -d @jobs.json \"https://solr.peviitor.ro/job/update/json?commit=true\"
 
           Security rules:
@@ -83,5 +88,56 @@ jobs:
           - Run the /scrape command with the company name: ${{ github.event.inputs.company }}
           - The scrape command will navigate to the company's careers page, extract job data.
           - CRITICAL: When pushing to Solr, use https://solr.peviitor.ro with the credentials from SOLR_USER and SOLR_PASSWD, NOT localhost.
-          - Only output the final result (number of jobs scraped and pushed).
+          - Output the final result (number of jobs scraped).
           "
+
+      - name: Check for new scraper files and update Solr
+        env:
+          SOLR_USER: ${{ secrets.SOLR_USER }}
+          SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
+          COMPANY_NAME: "${{ github.event.inputs.company }}"
+        run: |
+          # Find new files created in webscraper/
+          comm -23 <(ls -1 webscraper/*.md | sort) <(cat /tmp/before_scrape.txt | grep webscraper | awk '{print $NF}' | sort) > /tmp/new_files.txt
+          
+          if [ -s /tmp/new_files.txt ]; then
+            SCRAPER_FILE=$(cat /tmp/new_files.txt | head -1)
+            SCRAPER_FILE=$(basename "$SCRAPER_FILE")
+            echo "New scraper file detected: $SCRAPER_FILE"
+            
+            # Configure git
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            
+            # Add and commit the new scraper file
+            git add "webscraper/$SCRAPER_FILE"
+            git commit -m "Add scraper file: $SCRAPER_FILE" || echo "No changes to commit"
+            
+            # Push to origin
+            git push origin main
+            
+            # Extract company name from scraper file (remove .md extension)
+            COMPANY_FROM_FILE=$(basename "$SCRAPER_FILE" .md)
+            echo "Company name from file: $COMPANY_FROM_FILE"
+            
+            # Query Solr to get the company CUI
+            echo "Querying Solr for company CUI..."
+            COMPANY_RESPONSE=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/company/select?q=brand:*$COMPANY_FROM_FILE*&rows=1")
+            CUI=$(echo "$COMPANY_RESPONSE" | grep -oP '"id":"\K[^"]+' || echo "")
+            
+            if [ -n "$CUI" ]; then
+              echo "Found CUI: $CUI for company $COMPANY_FROM_FILE"
+              
+              # Atomic add to Solr company core with scraperFile
+              TODAY=$(date +%Y-%m-%d)
+              curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+                -H "Content-Type: application/json" \
+                -d "[{\"id\": \"$CUI\", \"lastScraped\": \"$TODAY\", \"scraperFile\": \"$SCRAPER_FILE\"}]"
+              
+              echo "Updated Solr company core with scraperFile: $SCRAPER_FILE"
+            else
+              echo "Company not found in Solr, skipping Solr update"
+            fi
+          else
+            echo "No new scraper file created"
+          fi

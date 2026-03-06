@@ -28,7 +28,10 @@ Scrape jobs from a company's career page and add them to Solr.
    - Example: "EPAM" → `webscraper/epam.md`
    - Example: "Endava" → `webscraper/endava.md`
 3. **IF found**: Read the file and follow the scraping instructions inside
-4. **IF NOT found**: Continue with steps below
+4. **IF NOT found**: 
+   - Create a new scraper file at `webscraper/{lowercase_company_name}.md`
+   - Include company info, careers URL, pagination rules, and data extraction steps
+   - This file will be saved and can be used for future scrapes
 
 ### Step 2: Check Company in Solr
 5. Query Solr company core to find the company:
@@ -151,12 +154,13 @@ Workflow:
            "lastScraped": "2026-03-05",
            "scraperFile": "epam.md"
          }]
-       - If company exists, you can just update lastScraped:
-         [{
-           "id": "33159615",
-           "lastScraped": "2026-03-05",
-           "scraperFile": "epam.md"
-         }]
+        - If company exists, use atomic add to update lastScraped AND scraperFile:
+          [{
+            "id": "33159615",
+            "lastScraped": "2026-03-05",
+            "scraperFile": "epam.md"
+          }]
+        - **IMPORTANT**: ALWAYS include both lastScraped AND scraperFile when updating company - this is atomic add, not overwrite
     b. Job core:
        - Use curl to POST to https://solr.peviitor.ro/solr/job/update/json?commit=true
        - Credentials: solr:SolrRocks
@@ -211,9 +215,9 @@ Note:
 - Use full legal company name from Solr company.company for "company" field
 - ALWAYS push company to Solr company core BEFORE pushing jobs
 - Use "activ" as default status for new companies
-- After scraping, update "lastScraped" and "scraperFile" fields in Solr company core with today's date (format: YYYY-MM-DD)
+- After scraping, ALWAYS update BOTH "lastScraped" AND "scraperFile" fields in Solr company core (format: YYYY-MM-DD)
 - Solr uses atomic upsert - if company id exists, it will merge fields (not overwrite)
-- When updating existing company, you can just send the fields you want to update (e.g., lastScraped)
+- When updating existing company, ALWAYS include both lastScraped and scraperFile fields - this is atomic add, not overwrite
 - Try to extract expirationdate from job page (look for "apply by", "expires", "valid until", "deadline" text). If found, parse the date and convert to ISO8601. If not found, leave empty.
 - **IMPORTANT - WEBSITE PRIORITY**: When company has multiple websites/careers pages, ALWAYS prioritize .ro domains and put them FIRST in arrays. Example: use ziramarketing.ro, NOT ziramarketing.com
 
