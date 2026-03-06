@@ -57,7 +57,9 @@
             <pre class="folder-tree"><span class="folder">peviitor_opencode_AI_scrapers/</span>
 ├── <span class="folder">.github/</span>                   # GitHub workflows și templates
 │   ├── <span class="folder">workflows/</span>
-│   │   └── <span class="md">pages.yml</span>              # GitHub Pages deployment
+│   │   ├── <span class="md">pages.yml</span>              # GitHub Pages deployment
+│   │   ├── <span class="md">opencode_scraper_to_solr.yml</span>  # Scraping via GitHub Actions
+│   │   └── <span class="md">opencode_cli.yml</span>        # OpenCode CLI workflow
 │   ├── <span class="folder">ISSUE_TEMPLATE/</span>
 │   │   ├── <span class="md">bug-report.md</span>
 │   │   └── <span class="md">feature-request.md</span>
@@ -83,7 +85,6 @@
 │   │   └── <span class="md">clean-project.md</span>
 │   └── package.json
 ├── <span class="folder">webscraper/</span>             # Prompt-uri scraping per companie
-│   ├── <span class="md">websites.md</span>            # Lista companii
 │   ├── <span class="md">epam.md</span>               # EPAM
 │   ├── <span class="md">endava.md</span>             # ENDAVA
 │   ├── <span class="md">bento.md</span>              # BENTO
@@ -162,7 +163,7 @@
                 </tr>
                 <tr>
                     <td><code>.github/workflows/</code></td>
-                    <td>GitHub Actions workflows. Conține pages.yml pentru GitHub Pages.</td>
+                    <td>GitHub Actions workflows: pages.yml (GitHub Pages), opencode_scraper_to_solr.yml (scraping), opencode_cli.yml (CLI).</td>
                 </tr>
                 <tr>
                     <td><code>.github/ISSUE_TEMPLATE/</code></td>
@@ -170,11 +171,7 @@
                 </tr>
                 <tr>
                     <td><code>webscraper/</code></td>
-                    <td>Prompt-uri de scraping specifice per companie. Conține 27 fișiere .md pentru diferite companii IT în România.</td>
-                </tr>
-                <tr>
-                    <td><code>webscraper/websites.md</code></td>
-                    <td>Lista companiilor cu Brand, CUI, Careers URL, și Scraper File asociat.</td>
+                    <td>Prompt-uri de scraping specifice per companie. Conține 31 fișiere .md pentru diferite companii IT în România. Datele companiilor sunt stocate în Solr company core.</td>
                 </tr>
                 <tr>
                     <td><code>tests/</code></td>
@@ -249,7 +246,7 @@ Teste Playwright (validare)</code></pre>
     </main>
 
     <footer>
-        <p>📅 Ultima actualizare: Feb 2026</p>
+        <p>📅 Ultima actualizare: Mar 2026</p>
     </footer>
 </body>
 </html>
