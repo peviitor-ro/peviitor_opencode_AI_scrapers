@@ -76,7 +76,7 @@
                 </tr>
                 <tr>
                     <td><code>/add-website</code></td>
-                    <td>Adaugă o nouă companie în websites.md</td>
+                    <td>Adaugă o nouă companie în Solr company core</td>
                 </tr>
                 <tr>
                     <td><code>/docs-update</code></td>
@@ -107,14 +107,16 @@
 /scrape "EPAM SYSTEMS INTERNATIONAL SRL"</code></pre>
             
             <h3>Pași:</h3>
-            <div class="step">1. Caută compania în <code>webscraper/websites.md</code> (caută după Brand SAU Company)</div>
-            <div class="step">2. Dacă există, citește fișierul scraper specific (ex: epam.md, endava.md)</div>
-            <div class="step">3. Deschide Chrome și navighează la pagina de cariere</div>
-            <div class="step">4. Extrage job-urile conform prompt-ului din scraper file</div>
-            <div class="step">5. Extrage tag-urile (seniority + field) conform instrucțiunilor</div>
-            <div class="step">6. Formatează datele conform Job Schema (fără description!)</div>
-            <div class="step">7. Trimite către Solr</div>
-            <div class="step">8. Actualizează "Last Scraped" în websites.md</div>
+            <div class="step">1. Caută compania în Solr company core (caută după Brand, Company, sau CUI)</div>
+            <div class="step">2. Dacă există fișier scraper specific (ex: epam.md, endava.md), citește-l</div>
+            <div class="step">3. Verifică dacă toate câmpurile companiei sunt complete în Solr</div>
+            <div class="step">4. Dacă lipsesc câmpuri (brand[], group[], website[], career[]), caută pe internet și actualizează</div>
+            <div class="step">5. Deschide Chrome și navighează la pagina de cariere</div>
+            <div class="step">6. Extrage job-urile conform prompt-ului din scraper file</div>
+            <div class="step">7. Extrage tag-urile (seniority + field) conform instrucțiunilor</div>
+            <div class="step">8. Formatează datele conform Job Schema (fără description!)</div>
+            <div class="step">9. Trimite către Solr (company core + job core)</div>
+            <div class="step">10. Actualizează "lastScraped" și "scraperFile" în Solr</div>
             
             <div class="note">
                 <strong>Notă:</strong> Pentru fiecare companie există un fișier scraper în <code>webscraper/</code> (epam.md, endava.md, bento.md, genpact.md). Acestea conțin instrucțiuni specifice pentru extragerea job-urilor și tag-urilor.
@@ -149,7 +151,7 @@
             <h3>Exemplu API - Adaugă companii:</h3>
             <pre><code>curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
   'https://solr.peviitor.ro/solr/company/update?commit=true' \
-  -d '[{"id":"12345678","company":"Example SRL","status":"activ","website":["https://example.com"],"career":["https://example.com/careers"]}]'</code></pre>
+  -d '[{"id":"12345678","company":"Example SRL","brand":["Example"],"group":["Example Group"],"status":"activ","website":["https://example.com"],"career":["https://example.com/careers"]}]'</code></pre>
             
             <h3>Verificare:</h3>
             <pre><code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/select?q=company:Example%20SRL"</code></pre>
@@ -161,6 +163,113 @@
                     <li>NU include câmpul "description" - nu există în schema Job</li>
                     <li>Follow Job/Company schema din SCHEMAS.md</li>
                     <li>Tag-urile trebuie să fie lowercase, fără diacritice</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Logica de Actualizare Companie</h2>
+            <p>Când rulezi /scrape sau /add-website, trebuie să te asiguri că toate câmpurile companiei sunt complete în Solr.</p>
+            
+            <h3>Câmpuri Company Model:</h3>
+            <table>
+                <tr>
+                    <th>Câmp</th>
+                    <th>Tip</th>
+                    <th>Obligatoriu</th>
+                </tr>
+                <tr>
+                    <td>id</td>
+                    <td>string</td>
+                    <td>Da (CUI)</td>
+                </tr>
+                <tr>
+                    <td>company</td>
+                    <td>string</td>
+                    <td>Da</td>
+                </tr>
+                <tr>
+                    <td>brand[]</td>
+                    <td>string[]</td>
+                    <td>Nu (Array!)</td>
+                </tr>
+                <tr>
+                    <td>group[]</td>
+                    <td>string[]</td>
+                    <td>Nu (Array!)</td>
+                </tr>
+                <tr>
+                    <td>status</td>
+                    <td>string</td>
+                    <td>Nu</td>
+                </tr>
+                <tr>
+                    <td>location[]</td>
+                    <td>string[]</td>
+                    <td>Nu</td>
+                </tr>
+                <tr>
+                    <td>website[]</td>
+                    <td>string[]</td>
+                    <td>Nu</td>
+                </tr>
+                <tr>
+                    <td>career[]</td>
+                    <td>string[]</td>
+                    <td>Nu</td>
+                </tr>
+                <tr>
+                    <td>lastScraped</td>
+                    <td>string</td>
+                    <td>Nu</td>
+                </tr>
+                <tr>
+                    <td>scraperFile</td>
+                    <td>string</td>
+                    <td>Nu</td>
+                </tr>
+            </table>
+            
+            <h3>Algoritm de Update:</h3>
+            <div class="step">1. Interoghează Solr pentru companie: <code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/company/select?q=id:{CUI}&fl=id,company,brand,group,status,location,website,career,lastScraped,scraperFile"</code></div>
+            <div class="step">2. Verifică dacă oricare din aceste câmpuri lipsesc sau sunt goale: brand[], group[], website[], career[], location[]</div>
+            <div class="step">3. Dacă LIPSEȘTE orice câmp → caută pe internet și actualizează TOATE câmpurile:</div>
+            <div class="step" style="margin-left: 1rem;">- Folosește targetare.ro pentru detalii companie</div>
+            <div class="step" style="margin-left: 1rem;">- Folosește WebSearch pentru website oficial (.ro prioritar)</div>
+            <div class="step" style="margin-left: 1rem;">- Folosește WebSearch pentru pagina de cariere (.ro prioritar)</div>
+            <div class="step" style="margin-left: 1rem;">- Folosește WebSearch pentru grupul parental</div>
+            <div class="step">4. Dacă TOATE câmpurile sunt complete → actualizează doar lastScraped și scraperFile</div>
+            
+            <h3>Exemplu - Complete Update (câmpuri lipsă):</h3>
+            <pre><code>curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "33159615",
+    "company": "EPAM SYSTEMS INTERNATIONAL SRL",
+    "brand": ["EPAM"],
+    "group": ["EPAM Systems"],
+    "status": "activ",
+    "website": ["https://www.epam.com"],
+    "career": ["https://www.epam.com/careers/locations/romania"],
+    "lastScraped": "2026-03-06",
+    "scraperFile": "epam.md"
+  }]'</code></pre>
+            
+            <h3>Exemplu - Minimal Update (toate câmpurile complete):</h3>
+            <pre><code>curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "33159615",
+    "lastScraped": "2026-03-06",
+    "scraperFile": "epam.md"
+  }]'</code></pre>
+            
+            <div class="note">
+                <strong>Important:</strong>
+                <ul>
+                    <li>brand[] și group[] sunt ARRAY-URI - folosește formatul ["valoare"]</li>
+                    <li>Caută automat pe internet dacă lipsesc câmpuri</li>
+                    <li>Prioritizează domeniile .ro pentru website și career</li>
                 </ul>
             </div>
         </section>
