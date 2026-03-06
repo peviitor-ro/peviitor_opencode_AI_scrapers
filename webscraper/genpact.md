@@ -65,7 +65,7 @@ From job listing:
 6. **Push to Solr** after each job or in batches
 
 ## Solr Schema
-Push to Solr at `http://localhost:8983/solr/job/update` with credentials `solr:SolrRocks`:
+Push to Solr at `http://localhost:8983/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
 ```json
 {
   "add": {

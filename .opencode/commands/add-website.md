@@ -64,7 +64,7 @@ Workflow:
 ## Solr Update Command:
 To add company to Solr, use atomic upsert (this will add if not exists, or merge if exists):
 ```bash
-curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -H "Content-Type: application/json" \
   -d '[{
     "id": "33159615",

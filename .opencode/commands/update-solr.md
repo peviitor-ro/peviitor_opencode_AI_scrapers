@@ -5,9 +5,9 @@ agent: build
 
 # SOLR AUTHENTICATION REMINDER
 **ALWAYS use credentials when pushing to Solr:**
-- Username: `solr`
-- Password: `SolrRocks`
-- Example: `curl -u solr:SolrRocks "https://solr.peviitor.ro/solr/job/update/json?commit=true"`
+- Use environment variables: `$SOLR_USER` and `$SOLR_PASSWD`
+- Example: `curl -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/update/json?commit=true"`
+- In GitHub Actions, use secrets: `${{ secrets.SOLR_USER }}` and `${{ secrets.SOLR_PASSWD }}`
 
 ---
 
@@ -30,7 +30,7 @@ Update the Solr index with new job or company data.
 1. Use the correct core:
    - Job data: `/solr/job/update/json?commit=true`
    - Company data: `/solr/company/update/json?commit=true`
-2. Use curl with credentials: `-u solr:SolrRocks`
+2. Use curl with credentials: `-u "$SOLR_USER:$SOLR_PASSWD"`
 3. Set Content-Type: `-H "Content-Type: application/json"`
 4. Add `commit=true` to immediately commit changes
 5. Use atomic upsert for company data - Solr will merge if id already exists
@@ -43,14 +43,14 @@ Update the Solr index with new job or company data.
 
 ### Add job documents:
 ```bash
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
   "https://solr.peviitor.ro/solr/job/update/json?commit=true" \
   -d '[{"url":"https://example.com/job","title":"Software Engineer","company":"Example SRL","status":"scraped","date":"2026-02-19T00:00:00Z"}]'
 ```
 
 ### Add company documents (with all fields):
 ```bash
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
   "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -d '[{
     "id": "12345678",
@@ -68,7 +68,7 @@ curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
 ### Update existing company (atomic upsert):
 ```bash
 # Just update lastScraped - other fields remain unchanged
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
   "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -d '[{
     "id": "12345678",
@@ -79,13 +79,13 @@ curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
 
 ### Query to verify:
 ```bash
-curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/job/select?q=company:Example%20SRL"
-curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:12345678"
+curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/select?q=company:Example%20SRL"
+curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/company/select?q=id:12345678"
 ```
 
 ## Important Notes
 
-- Always use credentials: `-u solr:SolrRocks`
+- Always use credentials: `-u "$SOLR_USER:$SOLR_PASSWD"`
 - Use `commit=true` or commit after batch
 - DO NOT include "description" field in Job documents
 - Follow Job/Company schema from SCHEMAS.md

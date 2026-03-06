@@ -4,6 +4,9 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
+const SOLR_USER = process.env.SOLR_USER || "solr";
+const SOLR_PASSWD = process.env.SOLR_PASSWD || "SolrRocks";
+
 function spawnSync(command: string, args: string[], options: any) {
     return require("child_process").spawnSync(command, args, options);
 }
@@ -38,7 +41,7 @@ test("remove-404 command - query jobs not verified today", async () => {
     ]);
 
     const addResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
         "http://localhost:8983/solr/job/update?commit=true",
@@ -49,7 +52,7 @@ test("remove-404 command - query jobs not verified today", async () => {
     expect(addJson.responseHeader.status).toBe(0);
 
     const queryResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "http://localhost:8983/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl1) + "%22+OR+url:%22" + encodeURIComponent(jobUrl2) + "%22&rows=20&fl=url,vdate"
     ], { encoding: "utf8" });
 
@@ -58,7 +61,7 @@ test("remove-404 command - query jobs not verified today", async () => {
 
     const cleanup1 = JSON.stringify({delete: {query: "url:\"" + jobUrl1 + "\""}});
     spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
         "http://localhost:8983/solr/job/update?commit=true",
@@ -67,7 +70,7 @@ test("remove-404 command - query jobs not verified today", async () => {
 
     const cleanup2 = JSON.stringify({delete: {query: "url:\"" + jobUrl2 + "\""}});
     spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
         "http://localhost:8983/solr/job/update?commit=true",
@@ -93,7 +96,7 @@ test("remove-404 command - update vdate for valid URL", async () => {
     }]);
 
     const addResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
         "http://localhost:8983/solr/job/update?commit=true",
@@ -109,7 +112,7 @@ test("remove-404 command - update vdate for valid URL", async () => {
     }]);
 
     const updateResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
         "http://localhost:8983/solr/job/update?commit=true",
@@ -120,7 +123,7 @@ test("remove-404 command - update vdate for valid URL", async () => {
     expect(updateJson.responseHeader.status).toBe(0);
 
     const queryResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "http://localhost:8983/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl) + "%22&fl=vdate"
     ], { encoding: "utf8" });
 
@@ -129,7 +132,7 @@ test("remove-404 command - update vdate for valid URL", async () => {
 
     const cleanup = JSON.stringify({delete: {query: "url:\"" + jobUrl + "\""}});
     spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
         "http://localhost:8983/solr/job/update?commit=true",
@@ -154,7 +157,7 @@ test("remove-404 command - delete 404 job", async () => {
     }]);
 
     const addResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
         "http://localhost:8983/solr/job/update?commit=true",
@@ -165,7 +168,7 @@ test("remove-404 command - delete 404 job", async () => {
     expect(addJson.responseHeader.status).toBe(0);
 
     const verifyResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "http://localhost:8983/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl404) + "%22"
     ], { encoding: "utf8" });
 
@@ -174,7 +177,7 @@ test("remove-404 command - delete 404 job", async () => {
 
     const deleteQuery = JSON.stringify({delete: {query: "url:\"" + jobUrl404 + "\""}});
     const deleteResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
         "http://localhost:8983/solr/job/update?commit=true",
@@ -185,7 +188,7 @@ test("remove-404 command - delete 404 job", async () => {
     expect(deleteJson.responseHeader.status).toBe(0);
 
     const afterResult = spawnSync("curl", [
-        "-s", "-u", "solr:SolrRocks",
+        "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "http://localhost:8983/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl404) + "%22"
     ], { encoding: "utf8" });
 

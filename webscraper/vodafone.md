@@ -88,10 +88,10 @@ Note: Remove diacritics for Solr (use "Bucuresti" not "București")
 
 ```bash
 # First, query to check if company exists
-curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:8971726"
+curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/select?q=id:8971726"
 
 # If not found, add new company:
-curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -H "Content-Type: application/json" \
   -d '[{
     "id": "8971726",
@@ -106,7 +106,7 @@ curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/jso
   }]'
 
 # If found, update lastScraped only (atomic add):
-curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -H "Content-Type: application/json" \
   -d '[{
     "id": "8971726",
@@ -151,14 +151,14 @@ Tags are generated based on job title and department. Use these rules:
 
 Push to Solr using curl:
 ```bash
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
   "http://localhost:8983/solr/job/update?commit=true" \
   -d '[{"url":"{JOB_URL}","title":"{TITLE}","company":"VODAFONE ROMANIA SA","cif":"8971726","location":["{LOCATION}"],"workmode":"{workmode}","date":"{ISO8601_DATE}","status":"scraped"}]'
 ```
 
 Example:
 ```bash
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
   "http://localhost:8983/solr/job/update?commit=true" \
   -d '[{"url":"https://jobs.vodafone.com/careers/job/563018695146629","title":"Sales Advisor - Brasov","company":"VODAFONE ROMANIA SA","cif":"8971726","location":["Brasov"],"workmode":"on-site","date":"2026-02-17T10:00:00Z","status":"scraped"}]'
 ```
@@ -170,7 +170,7 @@ curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
 - Location must be Romanian cities only - remove diacritics (Bucuresti not București)
 - Tags extraction is optional for Vodafone (not included in API response)
 - Commit to Solr after each batch (10 jobs) or at the end
-- Verify with: `curl -s -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=company:%22VODAFONE%20ROMANIA%20SA%22&rows=1"`
+- Verify with: `curl -s -u $SOLR_USER:$SOLR_PASSWD "http://localhost:8983/solr/job/select?q=company:%22VODAFONE%20ROMANIA%20SA%22&rows=1"`
 
 ## Pagination Note
 

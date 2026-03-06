@@ -5,9 +5,9 @@ agent: build
 
 # SOLR AUTHENTICATION REMINDER
 **ALWAYS use credentials when pushing to Solr:**
-- Username: `solr`
-- Password: `SolrRocks`
-- Example: `curl -u solr:SolrRocks "https://solr.peviitor.ro/solr/job/update/json?commit=true"`
+- Use environment variables: `$SOLR_USER` and `$SOLR_PASSWD`
+- Example: `curl -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/update/json?commit=true"`
+- In GitHub Actions, use secrets: `${{ secrets.SOLR_USER }}` and `${{ secrets.SOLR_PASSWD }}`
 
 ---
 
@@ -99,8 +99,8 @@ Job Model Schema (from SCHEMAS.md):
 Workflow:
 1. Parse company name from /scrape arguments
 2. Query Solr company core to find company:
-   - Try by brand: `curl -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=brand:COMPANY_NAME"`
-   - Try by company name: `curl -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=company:COMPANY_NAME"`
+   - Try by brand: `curl -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/company/select?q=brand:COMPANY_NAME"`
+   - Try by company name: `curl -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/company/select?q=company:COMPANY_NAME"`
    - Try by CUI if provided
 3. If not found in Solr:
    - Run /add-website with the company name
@@ -115,7 +115,7 @@ Workflow:
    - If company has both ziramarketing.com and ziramarketing.ro, use ONLY ziramarketing.ro
 5. Push company to Solr company core FIRST (before jobs):
    - Use curl to POST to https://solr.peviitor.ro/solr/company/update/json?commit=true
-   - Credentials: solr:SolrRocks
+   - Credentials: "$SOLR_USER:$SOLR_PASSWD"
    - Format: JSON with id, company, brand, group, status="activ", website[], career[]
    - This ensures company exists before jobs are added
    - **IMPORTANT**: When updating website[] or career[] arrays, ALWAYS prioritize .ro domains
@@ -141,7 +141,7 @@ Workflow:
 10. Push to Solr:
     a. Company core (ALWAYS do this first):
        - Use curl to POST to https://solr.peviitor.ro/solr/company/update/json?commit=true
-       - Credentials: solr:SolrRocks
+       - Credentials: "$SOLR_USER:$SOLR_PASSWD"
        - Format (use atomic upsert - Solr will merge if id exists):
          [{
            "id": "33159615",
@@ -163,7 +163,7 @@ Workflow:
         - **IMPORTANT**: ALWAYS include both lastScraped AND scraperFile when updating company - this is atomic add, not overwrite
     b. Job core:
        - Use curl to POST to https://solr.peviitor.ro/solr/job/update/json?commit=true
-       - Credentials: solr:SolrRocks
+       - Credentials: "$SOLR_USER:$SOLR_PASSWD"
        - Format: JSON array of job documents
 11. Verify insertion:
     - Query Solr for inserted company by id

@@ -74,7 +74,7 @@ Example:
 7. **Push to Solr** after each job or in batches
 
 ## Solr Schema
-Push to Solr at `http://localhost:8983/solr/job/update` with credentials `solr:SolrRocks`:
+Push to Solr at `http://localhost:8983/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
 ```json
 {
   "add": {
@@ -195,14 +195,14 @@ Extract from job title and responsibilities:
 
 Push to Solr using curl:
 ```bash
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
   "http://localhost:8983/solr/job/update?commit=true" \
   -d '[{"url":"{JOB_URL}","title":"{TITLE}","company":"FARMEC SA","cif":"199150","location":["{LOCATION}"],"workmode":"on-site","tags":["{tag1}","{tag2}"],"date":"{ISO8601_DATE}","status":"scraped"}]'
 ```
 
 Example with tags:
 ```bash
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
   "http://localhost:8983/solr/job/update?commit=true" \
   -d '[{"url":"https://www.farmec.ro/compania/joburi/reglor-utilaje-cluj-2-3-2-2-2-2-2-2/","title":"Reglor mașini-unelte–Secțiile de producție Cluj – Napoca","company":"FARMEC SA","cif":"199150","location":["Cluj-Napoca"],"workmode":"on-site","tags":["senior","productie"],"date":"2026-02-17T00:00:00Z","status":"scraped"}]'
 ```

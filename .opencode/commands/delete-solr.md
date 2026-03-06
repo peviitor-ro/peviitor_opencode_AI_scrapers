@@ -25,12 +25,12 @@ The value should be URL-encoded if it contains special characters.
 Example API call (using delete by query):
 ```bash
 # Delete job by URL
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
   'https://solr.peviitor.ro/solr/job/update/json?commit=true' \
   -d '{"delete":{"query":"url:\"https://example.com/job\""}}'
 
 # Delete company by CUI
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
   'https://solr.peviitor.ro/solr/company/update/json?commit=true' \
   -d '{"delete":{"query":"id:12345678"}}'
 ```

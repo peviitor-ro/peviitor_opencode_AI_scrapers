@@ -116,7 +116,7 @@ Update Solr index with new job or company data.
 ### Example API Call
 
 ```bash
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
   'https://solr.peviitor.ro/solr/company/update/json?commit=true' \
   -d '[{"id":"33159615","company":"EPAM SYSTEMS INTERNATIONAL SRL","brand":"EPAM","status":"activ"}]'
 ```
@@ -144,7 +144,7 @@ Delete job documents from Solr by key.
 ### Example
 
 ```bash
-curl -u solr:SolrRocks -X POST -H "Content-Type: application/json" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
   'https://solr.peviitor.ro/solr/job/update/json?commit=true' \
   -d '{"delete":{"query":"url:\"https://example.com/job\""}}'
 ```
@@ -207,7 +207,7 @@ AI: Adding to Solr company core... Done!
 ### Solr Command
 
 ```bash
-curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -H "Content-Type: application/json" \
   -d '[{
     "id": "33159615",

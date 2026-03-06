@@ -92,7 +92,7 @@ docker ps --filter "name=peviitor-solr"
 
 ```powershell
 # Access Solr API (requires credentials)
-curl -u solr:SolrRocks "http://localhost:8983/solr/job/select?q=*:*&rows=1"
+curl -u "$SOLR_USER:$SOLR_PASSWD" "http://localhost:8983/solr/job/select?q=*:*&rows=1"
 
 # Ping Solr to verify it's running
 curl -s http://localhost:8983/solr/admin/ping
@@ -226,7 +226,7 @@ No special environment variables are required for this project.
 1. Ensure Docker is running
 2. Start Solr container: `docker start peviitor-solr`
 3. Wait for Solr to be ready (port 8983)
-4. Use credentials: `solr:SolrRocks`
+4. Use credentials: `$SOLR_USER:$SOLR_PASSWD`
 
 ### Adding a New Company
 

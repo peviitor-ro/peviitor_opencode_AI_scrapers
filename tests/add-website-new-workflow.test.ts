@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 const SOLR_URL = "https://solr.peviitor.ro/solr/company";
-const SOLR_AUTH = "solr:SolrRocks";
+const SOLR_USER = process.env.SOLR_USER || "solr";
+const SOLR_PASSWD = process.env.SOLR_PASSWD || "SolrRocks";
+const SOLR_AUTH = `${SOLR_USER}:${SOLR_PASSWD}`;
 
 test.describe("add-website command - new workflow", () => {
     const testCompany = "EPAM";

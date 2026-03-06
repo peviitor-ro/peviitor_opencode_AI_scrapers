@@ -222,15 +222,15 @@ npm install</code></pre>
             <pre><code>docker start peviitor-solr</code></pre>
             
             <div class="step">Verifică că Solr este accesibil:</div>
-            <pre><code>curl -s -u solr:SolrRocks "http://localhost:8983/solr/admin/cores"</code></pre>
+            <pre><code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "http://localhost:8983/solr/admin/cores"</code></pre>
             
             <p class="check">✓ Ar trebui să vezi un răspuns JSON cu statusul cores-urilor.</p>
             
             <div class="note">
                 <strong>Credentiale Solr:</strong>
                 <ul>
-                    <li>Username: <code>solr</code></li>
-                    <li>Password: <code>SolrRocks</code></li>
+<li>Username: <code>$SOLR_USER</code></li>
+                    <li>Password: <code>$SOLR_PASSWD</code></li>
                 </ul>
             </div>
         </section>

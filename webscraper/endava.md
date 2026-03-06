@@ -83,10 +83,10 @@ From the job detail page, extract:
 
 ```bash
 # First, query to check if company exists
-curl -s -u solr:SolrRocks "https://solr.peviitor.ro/solr/company/select?q=id:9533457"
+curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/select?q=id:9533457"
 
 # If not found, add new company:
-curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -H "Content-Type: application/json" \
   -d '[{
     "id": "9533457",
@@ -101,7 +101,7 @@ curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/jso
   }]'
 
 # If found, update lastScraped only (atomic add):
-curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -H "Content-Type: application/json" \
   -d '[{
     "id": "9533457",
@@ -113,7 +113,7 @@ curl -u solr:SolrRocks -X POST "https://solr.peviitor.ro/solr/company/update/jso
 **IMPORTANT**: Always use the company's CUI as the `id` field. When updating, only include the fields that need to change - Solr will merge with existing data (atomic update).
 
 ## Solr Schema
-Push to Solr at `http://localhost:8983/solr/job/update` with credentials `solr:SolrRocks`:
+Push to Solr at `http://localhost:8983/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
 ```json
 {
   "add": {
