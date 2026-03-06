@@ -37,8 +37,8 @@ Arguments:
 |-------|------|----------|-------------|
 | id | string | Yes | CIF/CUI (8 digits) |
 | company | string | Yes | Legal company name (diacritics REQUIRED) |
-| brand | string | No | Commercial brand name |
-| group | string | No | Parent company group |
+| brand | string[] | No | Commercial brand name(s) - Array |
+| group | string[] | No | Parent company group(s) - Array |
 | status | string | No | "activ", "suspendat", "inactiv", "radiat" |
 | location | string[] | No | Romanian cities |
 | website | string[] | No | Official website URL(s) |
@@ -69,8 +69,8 @@ curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company
   -d '[{
     "id": "33159615",
     "company": "EPAM SYSTEMS INTERNATIONAL SRL",
-    "brand": "EPAM",
-    "group": "EPAM Systems",
+    "brand": ["EPAM"],
+    "group": ["EPAM Systems"],
     "status": "activ",
     "website": ["https://www.epam.com", "https://www.epam.ro"],
     "career": ["https://www.epam.com/careers/locations/romania", "https://careers.epam.com"],
@@ -129,18 +129,18 @@ Example Flow:
 5. AI extracts details and searches for careers page
 6. AI presents to user:
    - Full Name: EPAM SYSTEMS INTERNATIONAL SRL
-   - Brand: EPAM
+   - Brand: ["EPAM"]
    - Website: https://www.epam.com
    - Careers: https://www.epam.com/careers/locations/romania
    - CUI: 33159615
-   - Group: EPAM Systems
+   - Group: ["EPAM Systems"]
 7. User confirms: "Yes, save it"
 8. AI adds the company to Solr company core:
    [{
      "id": "33159615",
      "company": "EPAM SYSTEMS INTERNATIONAL SRL",
-     "brand": "EPAM",
-     "group": "EPAM Systems",
+     "brand": ["EPAM"],
+     "group": ["EPAM Systems"],
      "status": "activ",
      "website": ["https://www.epam.com"],
      "career": ["https://www.epam.com/careers/locations/romania"]

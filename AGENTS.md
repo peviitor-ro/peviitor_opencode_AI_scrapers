@@ -263,6 +263,7 @@ Custom commands are defined in `.opencode/commands/` directory.
 | `/docs-update` | Update project documentation based on all files |
 | `/instructions` | Show project instructions |
 | `/remove-404` | Remove jobs from Solr that return 404 errors |
+| `/clean-project` | Clean temporary files and update documentation |
 
 ### Usage
 

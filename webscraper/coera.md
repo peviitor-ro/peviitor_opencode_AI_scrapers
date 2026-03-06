@@ -62,17 +62,17 @@ Example: `https://jobs.smartrecruiters.com/COERA/743999680007137-go-beyond-for-y
 7. **Update Solr company core**: Use atomic upsert to update company with today's date (DO NOT overwrite - use id as unique key):
 
 ```bash
-# First, query to check if company exists
-curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/select?q=id:32519996"
+# First, query to check if company exists and get all fields
+curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/select?q=id:32519996&fl=id,company,brand,group,status,location,website,career,lastScraped,scraperFile"
 
-# If not found, add new company:
+# If NOT found, add new company with ALL fields:
 curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -H "Content-Type: application/json" \
   -d '[{
     "id": "32519996",
     "company": "COERA BC SRL",
-    "brand": "COERA",
-    "group": "-",
+    "brand": ["COERA"],
+    "group": ["-"],
     "status": "activ",
     "website": ["https://www.co-era.com"],
     "career": ["https://www.co-era.com/careers"],
@@ -80,7 +80,26 @@ curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/u
     "scraperFile": "coera.md"
   }]'
 
-# If found, update lastScraped only (atomic add):
+# If found, check if fields are missing/empty:
+# - If brand[], group[], website[], career[] are missing or empty → search internet and update ALL fields
+# - If all fields are complete → only update lastScraped and scraperFile
+
+# Update with ALL fields (if missing data found):
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "id": "32519996",
+    "company": "COERA BC SRL",
+    "brand": ["COERA"],
+    "group": ["-"],
+    "status": "activ",
+    "website": ["https://www.co-era.com"],
+    "career": ["https://www.co-era.com/careers"],
+    "lastScraped": "2026-03-05",
+    "scraperFile": "coera.md"
+  }]'
+
+# OR just update lastScraped (if all fields are complete):
 curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
   -H "Content-Type: application/json" \
   -d '[{
@@ -91,6 +110,18 @@ curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/u
 ```
 
 **IMPORTANT**: Always use the company's CUI as the `id` field.
+
+## Company Update Logic
+
+When updating the company in Solr:
+1. Query: `curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/select?q=id:32519996&fl=id,company,brand,group,status,location,website,career,lastScraped,scraperFile"`
+2. Check if ANY of these fields are missing or empty: brand[], group[], website[], career[], location[]
+3. If ANY field is missing → search internet for missing data and update ALL fields:
+   - Use targetare.ro to get company details
+   - Use WebSearch to find official website(s) - prioritize .ro domains
+   - Use WebSearch to find careers page(s) - prioritize .ro domains
+   - Use WebSearch to find parent company group
+4. If ALL fields are complete → only update lastScraped and scraperFile
 
 ## Job Data Fields
 

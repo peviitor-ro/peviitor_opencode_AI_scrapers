@@ -72,12 +72,12 @@ Arguments:
 |-------|------|----------|-------------|
 | id | string | Yes | CIF/CUI (8 digits) |
 | company | string | Yes | Legal company name (diacritics REQUIRED) |
-| brand | string | No | Commercial brand name (e.g. "ORANGE", "EPAM") |
-| group | string | No | Parent company group (e.g. "Orange Group") |
+| brand | string[] | No | Commercial brand name(s) - Array (e.g. ["ORANGE"], ["Orange", "Orange Business"]) |
+| group | string[] | No | Parent company group(s) - Array (e.g. ["Orange Group"]) |
 | status | string | No | "activ", "suspendat", "inactiv", "radiat" |
 | location | string[] | No | Romanian cities, DIACRITICS ACCEPTED |
-| website | string[] | No | Official website URL(s) |
-| career | string[] | No | Career page URL(s) |
+| website | string[] | No | Official website URL(s) - ALWAYS prioritize .ro domains |
+| career | string[] | No | Career page URL(s) - ALWAYS prioritize .ro domains |
 | lastScraped | string | No | Date of last scrape (e.g. "2026-02-20") |
 | scraperFile | string | No | Name of scraper file (e.g. "epam.md") |
 
@@ -105,18 +105,47 @@ Workflow:
 3. If not found in Solr:
    - Run /add-website with the company name
    - Re-query Solr to get updated data
-4. Get company data from Solr response:
+4. If company EXISTS in Solr, check if all fields are complete:
+   - Query: `curl -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/company/select?q=id:{CUI}&fl=id,company,brand,group,status,location,website,career,lastScraped,scraperFile"`
+   - Check for missing or empty fields:
+     - brand[] is missing or empty
+     - group[] is missing or empty  
+     - website[] is missing or empty
+     - career[] is missing or empty
+     - location[] is missing or empty
+   - If ANY field is missing or empty, research and update:
+     a. Search for company on targetare.ro to get CUI
+     b. Navigate to targetare.ro to get full company details
+     c. Search for official website(s) - prioritize .ro domains
+     d. Search for careers page(s) - prioritize .ro domains
+     e. Search for parent group
+     f. Use WebSearch to find any missing data
+5. If updating company, use atomic upsert with ALL fields:
+   - curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+     -H "Content-Type: application/json" \
+     -d '[{
+       "id": "33159615",
+       "company": "EPAM SYSTEMS INTERNATIONAL SRL",
+       "brand": ["EPAM"],
+       "group": ["EPAM Systems"],
+       "status": "activ",
+       "website": ["https://www.epam.com"],
+       "career": ["https://www.epam.com/careers/locations/romania"],
+       "lastScraped": "2026-03-05",
+       "scraperFile": "epam.md"
+     }]'
+6. Get company data from Solr response:
    - id (CUI)
    - company (full legal name)
-   - brand
-   - group
+   - brand[] - if missing, research and update
+   - group[] - if missing, research and update
    - website[] - **IMPORTANT**: When multiple websites exist, use .ro domains FIRST
    - career[] - **IMPORTANT**: When multiple careers pages exist, use .ro domains FIRST
    - If company has both ziramarketing.com and ziramarketing.ro, use ONLY ziramarketing.ro
 5. Push company to Solr company core FIRST (before jobs):
    - Use curl to POST to https://solr.peviitor.ro/solr/company/update/json?commit=true
    - Credentials: "$SOLR_USER:$SOLR_PASSWD"
-   - Format: JSON with id, company, brand, group, status="activ", website[], career[]
+   - Format: JSON with id, company, brand[], group[], status="activ", website[], career[]
    - This ensures company exists before jobs are added
    - **IMPORTANT**: When updating website[] or career[] arrays, ALWAYS prioritize .ro domains
    - Put .ro domains FIRST in arrays: e.g., `["https://www.company.ro", "https://www.company.com"]`
@@ -172,14 +201,21 @@ Workflow:
 
 Example Flow:
 1. User runs: /scrape EPAM
-2. AI queries Solr: https://solr.peviitor.ro/solr/company/select?q=brand:EPAM
+2. AI queries://solr.pe Solr: httpsviitor.ro/solr/company/select?q=brand:EPAM
 3. Found! career: https://www.epam.com/careers/locations/romania
-4. AI pushes company to Solr company core (atomic upsert):
+4. AI checks if all company fields are complete:
+   - Query: https://solr.peviitor.ro/solr/company/select?q=id:33159615&fl=id,company,brand,group,status,location,website,career
+5. If fields are missing (brand, group, website, career empty):
+   - AI searches targetare.ro for company details
+   - AI searches for official website (.ro priority)
+   - AI searches for careers page (.ro priority)
+   - AI searches for parent company group
+6. AI pushes company to Solr company core (atomic upsert):
    [{
      "id": "33159615",
      "company": "EPAM SYSTEMS INTERNATIONAL SRL",
-     "brand": "EPAM",
-     "group": "EPAM Systems",
+     "brand": ["EPAM"],
+     "group": ["EPAM Systems"],
      "status": "activ",
      "website": ["https://www.epam.com", "https://www.epam.ro"],
      "career": ["https://www.epam.com/careers/locations/romania"],
