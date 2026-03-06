@@ -113,7 +113,7 @@ curl -u $SOLR_USER:$SOLR_PASSWD -X POST "https://solr.peviitor.ro/solr/company/u
 **IMPORTANT**: Always use the company's CUI as the `id` field. When updating, only include the fields that need to change - Solr will merge with existing data (atomic update).
 
 ## Solr Schema
-Push to Solr at `http://localhost:8983/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
+Push to Solr at `https://solr.peviitor.ro/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
 ```json
 {
   "add": {

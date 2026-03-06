@@ -52,6 +52,7 @@
             <li><a href="tests.html">Teste</a></li>
             <li><a href="schemas.html">Schema Date</a></li>
             <li><a href="setup.html" class="active">Setup</a></li>
+            <li><a href="github-actions.html">GitHub Actions</a></li>
         </ul>
     </nav>
 
@@ -156,7 +157,7 @@
             <ul>
                 <li>Modelul AI rulează în <strong>cloud-ul OpenCode</strong> (opencode.ai)</li>
                 <li>Comenzile sunt trimise de la AI cloud către Chrome local via MCP</li>
-                <li>Solr comunică direct cu calculatorul tău (localhost)</li>
+                <li>Solr este disponibil pe serverul de producție (solr.peviitor.ro)</li>
             </ul>
 
             <div class="step"><strong>Ce necesită internet:</strong></div>
@@ -169,9 +170,9 @@
             <div class="danger">
                 <strong>🔒 Confidențialitate:</strong>
                 <ul>
-                    <li>Datele de job-uri rămân în Solr local</li>
+                    <li>Datele de job-uri sunt stocate pe serverul Solr</li>
                     <li>Navigarea web este locală în Chrome</li>
-                    <li>Solr rulează doar pe localhost (port 8983)</li>
+                    <li>Solr rulează pe serverul de producție (solr.peviitor.ro)</li>
                     <li>Chrome DevTools MCP conectează cloud-ul la browser-ul local</li>
                 </ul>
             </div>
@@ -222,7 +223,7 @@ npm install</code></pre>
             <pre><code>docker start peviitor-solr</code></pre>
             
             <div class="step">Verifică că Solr este accesibil:</div>
-            <pre><code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "http://localhost:8983/solr/admin/cores"</code></pre>
+            <pre><code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/admin/cores"</code></pre>
             
             <p class="check">✓ Ar trebui să vezi un răspuns JSON cu statusul cores-urilor.</p>
             

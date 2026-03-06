@@ -179,14 +179,14 @@ Extract from job TITLE and DESCRIPTION:
 Push to Solr using curl:
 ```bash
 curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
-  "http://localhost:8983/solr/job/update?commit=true" \
+  "https://solr.peviitor.ro/solr/job/update?commit=true" \
   -d '[{"url":"{JOB_URL}","title":"{TITLE}","company":"NTT DATA ROMANIA SA","cif":"13091574","location":["{LOCATION}"],"workmode":"{workmode}","tags":["{tag1}","{tag2}"],"date":"{ISO8601_DATE}","status":"scraped"}]'
 ```
 
 Example:
 ```bash
 curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
-  "http://localhost:8983/solr/job/update?commit=true" \
+  "https://solr.peviitor.ro/solr/job/update?commit=true" \
   -d '[{"url":"https://careers.nttdata.ro/nttdataromania/job/Cluj-NodeJS-Developer/1263983901/","title":"NodeJS Developer","company":"NTT DATA ROMANIA SA","cif":"13091574","location":["Cluj","Sibiu","Bucuresti","Brasov","Iasi","Timisoara"],"workmode":"hybrid","tags":["nodejs","javascript","microservices","gcp","docker","kubernetes","graphql"],"date":"2026-02-17T00:00:00Z","status":"scraped"}]'
 ```
 
@@ -201,7 +201,7 @@ curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
 - workmode values must be exactly: "remote", "on-site", or "hybrid"
 - tags must be lowercase, no diacritics, max 20 entries
 - Commit to Solr after each batch (25 jobs) or at the end
-- Verify with: `curl -s -u $SOLR_USER:$SOLR_PASSWD "http://localhost:8983/solr/job/select?q=company:%22NTT%20DATA%20ROMANIA%20SA%22&rows=1"`
+- Verify with: `curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/select?q=company:%22NTT%20DATA%20ROMANIA%20SA%22&rows=1"`
 
 ## Current Job Distribution (Feb 2026)
 

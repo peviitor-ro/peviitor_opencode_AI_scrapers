@@ -28,7 +28,7 @@ When deleting documents from Solr, **always use the delete-by-query format**:
 
 ```bash
 curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
-  'http://localhost:8983/solr/job/update?commit=true' \
+  'https://solr.peviitor.ro/solr/job/update?commit=true' \
   -d '{"delete":{"query":"url:\"https://example.com/job\""}}'
 ```
 

@@ -54,7 +54,7 @@ https://edparts.ro/cariere/
 5. **Push to Solr** after each job or in batches
 
 ## Solr Schema
-Push to Solr at `http://localhost:8983/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
+Push to Solr at `https://solr.peviitor.ro/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
 ```json
 {
   "add": {

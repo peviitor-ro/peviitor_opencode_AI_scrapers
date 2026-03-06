@@ -14,7 +14,7 @@ function spawnSync(command: string, args: string[], options: any) {
 test.describe("remove-404 with Chrome DevTools validation", () => {
     test("should query jobs without vdate from Solr", async () => {
         const { stdout } = await execAsync(
-            `curl -s -u ${SOLR_USER}:${SOLR_PASSWD} "http://localhost:8983/solr/job/select?q=NOT+vdate:*&rows=10&fl=url"`
+            `curl -s -u ${SOLR_USER}:${SOLR_PASSWD} "https://solr.peviitor.ro/solr/job/select?q=NOT+vdate:*&rows=10&fl=url"`
         );
         const response = JSON.parse(stdout);
         expect(response.response.numFound).toBeGreaterThan(0);
@@ -40,7 +40,7 @@ test.describe("remove-404 with Chrome DevTools validation", () => {
             "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
             "-X", "POST", 
             "-H", "Content-Type: application/json", 
-            "http://localhost:8983/solr/job/update?commit=true", 
+            "https://solr.peviitor.ro/solr/job/update?commit=true", 
             "-d", jobData
         ], { encoding: "utf8" });
         
@@ -50,7 +50,7 @@ test.describe("remove-404 with Chrome DevTools validation", () => {
         const queryUrl = encodeURIComponent(jobUrl);
         const verifyResult = spawnSync("curl", [
             "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
-            "http://localhost:8983/solr/job/select?q=url:%22" + queryUrl + "%22"
+            "https://solr.peviitor.ro/solr/job/select?q=url:%22" + queryUrl + "%22"
         ], { encoding: "utf8" });
         const verifyJson = JSON.parse(verifyResult.stdout);
         expect(verifyJson.response.numFound).toBe(1);
@@ -60,7 +60,7 @@ test.describe("remove-404 with Chrome DevTools validation", () => {
             "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
             "-X", "POST", 
             "-H", "Content-Type: application/json", 
-            "http://localhost:8983/solr/job/update?commit=true", 
+            "https://solr.peviitor.ro/solr/job/update?commit=true", 
             "-d", deleteQuery
         ], { encoding: "utf8" });
         const deleteJson = JSON.parse(deleteResult.stdout);
@@ -68,7 +68,7 @@ test.describe("remove-404 with Chrome DevTools validation", () => {
         
         const afterResult = spawnSync("curl", [
             "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
-            "http://localhost:8983/solr/job/select?q=url:%22" + queryUrl + "%22"
+            "https://solr.peviitor.ro/solr/job/select?q=url:%22" + queryUrl + "%22"
         ], { encoding: "utf8" });
         const afterJson = JSON.parse(afterResult.stdout);
         expect(afterJson.response.numFound).toBe(0);
@@ -93,7 +93,7 @@ test.describe("remove-404 with Chrome DevTools validation", () => {
             "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
             "-X", "POST", 
             "-H", "Content-Type: application/json", 
-            "http://localhost:8983/solr/job/update?commit=true", 
+            "https://solr.peviitor.ro/solr/job/update?commit=true", 
             "-d", jobData
         ], { encoding: "utf8" });
         
@@ -105,7 +105,7 @@ test.describe("remove-404 with Chrome DevTools validation", () => {
             "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
             "-X", "POST", 
             "-H", "Content-Type: application/json", 
-            "http://localhost:8983/solr/job/update?commit=true", 
+            "https://solr.peviitor.ro/solr/job/update?commit=true", 
             "-d", JSON.stringify([{url: jobUrl, vdate: vdate}])
         ], { encoding: "utf8" });
         
@@ -115,7 +115,7 @@ test.describe("remove-404 with Chrome DevTools validation", () => {
         const queryUrl = encodeURIComponent(jobUrl);
         const verifyResult = spawnSync("curl", [
             "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
-            "http://localhost:8983/solr/job/select?q=url:%22" + queryUrl + "%22&fl=url,vdate"
+            "https://solr.peviitor.ro/solr/job/select?q=url:%22" + queryUrl + "%22&fl=url,vdate"
         ], { encoding: "utf8" });
         const verifyJson = JSON.parse(verifyResult.stdout);
         expect(verifyJson.response.docs[0].vdate).toBe(vdate);
@@ -125,7 +125,7 @@ test.describe("remove-404 with Chrome DevTools validation", () => {
             "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
             "-X", "POST", 
             "-H", "Content-Type: application/json", 
-            "http://localhost:8983/solr/job/update?commit=true", 
+            "https://solr.peviitor.ro/solr/job/update?commit=true", 
             "-d", deleteQuery
         ], { encoding: "utf8" });
     });

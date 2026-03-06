@@ -45,6 +45,7 @@
             <li><a href="tests.html" class="active">Teste</a></li>
             <li><a href="schemas.html">Schema Date</a></li>
             <li><a href="setup.html">Setup</a></li>
+            <li><a href="github-actions.html">GitHub Actions</a></li>
         </ul>
     </nav>
 
@@ -156,7 +157,7 @@ export default defineConfig({
   testDir: ".",
   timeout: 30000,
   use: {
-    baseURL: "http://localhost:8983",
+    baseURL: "https://solr.peviitor.ro",
     headless: false,
     launchOptions: {
       args: ["--remote-debugging-port=9222"],
@@ -188,7 +189,7 @@ export default defineConfig({
 
 test("descriere test", async ({ page }) => {
     // Logica testului
-    await page.goto("http://localhost:8983/solr/");
+    await page.goto("https://solr.peviitor.ro/solr/");
     // ...
 });</code></pre>
             

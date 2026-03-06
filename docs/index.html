@@ -179,6 +179,7 @@
             <li><a href="tests.html">Teste</a></li>
             <li><a href="schemas.html">Schema Date</a></li>
             <li><a href="setup.html">Setup</a></li>
+            <li><a href="github-actions.html">GitHub Actions</a></li>
         </ul>
     </nav>
 
@@ -242,16 +243,16 @@
         <section>
             <h2>Fluxul de Lucru</h2>
             
-            <pre><code>1. Găsește compania în websites.md
-         ↓
+            <pre><code>1. Găsește compania în Solr company core (https://solr.peviitor.ro/solr/company/select)
+          ↓
 2. Rulează comanda /scrape [nume_companie]
-         ↓
+          ↓
 3. AI-ul deschide Chrome și navighează pe site
-         ↓
+          ↓
 4. Extrage job-urile conform Job Schema
-         ↓
+          ↓
 5. Trimite datele către Solr
-         ↓
+          ↓
 6. Verifică cu testele Playwright</code></pre>
         </section>
 
@@ -282,9 +283,9 @@
             <div class="alert alert-info">
                 <strong>🔒 Confidențialitate:</strong>
                 <ul>
-                    <li>Datele de scraping rămân local în Solr</li>
+                    <li>Datele de scraping sunt stocate pe serverul Solr</li>
                     <li>Navigarea Chrome este locală</li>
-                    <li>Solr rulează doar pe localhost</li>
+                    <li>Solr rulează pe serverul de producție (solr.peviitor.ro)</li>
                     <li>AI-ul procesează în cloud OpenCode</li>
                 </ul>
             </div>
@@ -317,6 +318,10 @@
                 <tr>
                     <td><a href="setup.html">Setup</a></td>
                     <td>Ghid de instalare și configurare</td>
+                </tr>
+                <tr>
+                    <td><a href="github-actions.html">GitHub Actions</a></td>
+                    <td>CI/CD automation workflows</td>
                 </tr>
             </table>
         </section>

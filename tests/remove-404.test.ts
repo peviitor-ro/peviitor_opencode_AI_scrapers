@@ -13,7 +13,7 @@ function spawnSync(command: string, args: string[], options: any) {
 
 test("remove-404 command - get all jobs from Solr", async () => {
     const { stdout } = await execAsync(
-        `curl -s -u ${SOLR_USER}:${SOLR_PASSWD} "http://localhost:8983/solr/job/select?q=*:*&rows=1000"`
+        `curl -s -u ${SOLR_USER}:${SOLR_PASSWD} "https://solr.peviitor.ro/solr/job/select?q=*:*&rows=1000"`
     );
     const response = JSON.parse(stdout);
     expect(response.response.numFound).toBeGreaterThan(0);
@@ -40,7 +40,7 @@ test("remove-404 command - delete job that returns 404", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
         "-X", "POST", 
         "-H", "Content-Type: application/json", 
-        "http://localhost:8983/solr/job/update?commit=true", 
+        "https://solr.peviitor.ro/solr/job/update?commit=true", 
         "-d", jobData
     ], { encoding: "utf8" });
     
@@ -50,7 +50,7 @@ test("remove-404 command - delete job that returns 404", async () => {
     const queryUrl = encodeURIComponent(jobUrl404);
     const verifyResult = spawnSync("curl", [
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
-        "http://localhost:8983/solr/job/select?q=url:%22" + queryUrl + "%22"
+        "https://solr.peviitor.ro/solr/job/select?q=url:%22" + queryUrl + "%22"
     ], { encoding: "utf8" });
     const verifyJson = JSON.parse(verifyResult.stdout);
     expect(verifyJson.response.numFound).toBe(1);
@@ -60,7 +60,7 @@ test("remove-404 command - delete job that returns 404", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
         "-X", "POST", 
         "-H", "Content-Type: application/json", 
-        "http://localhost:8983/solr/job/update?commit=true", 
+        "https://solr.peviitor.ro/solr/job/update?commit=true", 
         "-d", deleteQuery
     ], { encoding: "utf8" });
     const deleteJson = JSON.parse(deleteResult.stdout);
@@ -68,7 +68,7 @@ test("remove-404 command - delete job that returns 404", async () => {
     
     const afterResult = spawnSync("curl", [
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`, 
-        "http://localhost:8983/solr/job/select?q=url:%22" + queryUrl + "%22"
+        "https://solr.peviitor.ro/solr/job/select?q=url:%22" + queryUrl + "%22"
     ], { encoding: "utf8" });
     const afterJson = JSON.parse(afterResult.stdout);
     expect(afterJson.response.numFound).toBe(0);

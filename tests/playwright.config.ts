@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: ".",
   timeout: 30000,
   use: {
-    baseURL: "http://localhost:8983",
+    baseURL: "https://solr.peviitor.ro",
     headless: false,
     launchOptions: {
       args: ["--remote-debugging-port=9222"],

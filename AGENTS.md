@@ -92,10 +92,10 @@ docker ps --filter "name=peviitor-solr"
 
 ```powershell
 # Access Solr API (requires credentials)
-curl -u "$SOLR_USER:$SOLR_PASSWD" "http://localhost:8983/solr/job/select?q=*:*&rows=1"
+curl -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/select?q=*:*&rows=1"
 
 # Ping Solr to verify it's running
-curl -s http://localhost:8983/solr/admin/ping
+curl -s https://solr.peviitor.ro/solr/admin/ping
 ```
 
 ### Running Playwright Tests

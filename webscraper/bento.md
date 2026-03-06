@@ -70,7 +70,7 @@ Example: `https://bento.normahr.ro/careers-site/branch/c33e7207-eb18-4ac1-b01c-1
 7. **Push to Solr** after each job or in batches
 
 ## Solr Schema
-Push to Solr at `http://localhost:8983/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
+Push to Solr at `https://solr.peviitor.ro/solr/job/update` with credentials `$SOLR_USER:$SOLR_PASSWD`:
 ```json
 {
   "add": {

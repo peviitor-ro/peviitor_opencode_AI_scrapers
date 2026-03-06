@@ -150,14 +150,14 @@ This is a general software engineering position that accepts candidates at vario
 Push to Solr using curl:
 ```bash
 curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
-  "http://localhost:8983/solr/job/update?commit=true" \
+  "https://solr.peviitor.ro/solr/job/update?commit=true" \
   -d '[{"url":"{JOB_URL}","title":"{TITLE}","company":"COERA BC SRL","cif":"32519996","location":["Cluj-Napoca"],"workmode":"on-site","tags":["{tag1}","{tag2}"],"date":"2026-02-17T00:00:00Z","status":"scraped"}]'
 ```
 
 Example:
 ```bash
 curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
-  "http://localhost:8983/solr/job/update?commit=true" \
+  "https://solr.peviitor.ro/solr/job/update?commit=true" \
   -d '[{"url":"https://jobs.smartrecruiters.com/COERA/743999680007137-go-beyond-for-your-role-","title":"Go beyond for your role!","company":"COERA BC SRL","cif":"32519996","location":["Cluj-Napoca"],"workmode":"on-site","tags":["software-engineer",".net","node.js","azure","postgresql","angularjs","sql-server","ef-core"],"date":"2026-02-17T00:00:00Z","status":"scraped"}]'
 ```
 
@@ -179,4 +179,4 @@ This is a general open position for software engineers. The job description ment
 - Only 1 position listed (general software engineering role)
 - This is a contract position, not full-time
 - Work mode is on-site (no remote option)
-- Verify with: `curl -s -u $SOLR_USER:$SOLR_PASSWD "http://localhost:8983/solr/job/select?q=cif:32519996"`
+- Verify with: `curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/select?q=cif:32519996"`

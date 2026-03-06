@@ -44,7 +44,7 @@ test("remove-404 command - query jobs not verified today", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
-        "http://localhost:8983/solr/job/update?commit=true",
+        "https://solr.peviitor.ro/solr/job/update?commit=true",
         "-d", jobData
     ], { encoding: "utf8" });
 
@@ -53,7 +53,7 @@ test("remove-404 command - query jobs not verified today", async () => {
 
     const queryResult = spawnSync("curl", [
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
-        "http://localhost:8983/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl1) + "%22+OR+url:%22" + encodeURIComponent(jobUrl2) + "%22&rows=20&fl=url,vdate"
+        "https://solr.peviitor.ro/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl1) + "%22+OR+url:%22" + encodeURIComponent(jobUrl2) + "%22&rows=20&fl=url,vdate"
     ], { encoding: "utf8" });
 
     const queryJson = JSON.parse(queryResult.stdout);
@@ -64,7 +64,7 @@ test("remove-404 command - query jobs not verified today", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
-        "http://localhost:8983/solr/job/update?commit=true",
+        "https://solr.peviitor.ro/solr/job/update?commit=true",
         "-d", cleanup1
     ], { encoding: "utf8" });
 
@@ -73,7 +73,7 @@ test("remove-404 command - query jobs not verified today", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
-        "http://localhost:8983/solr/job/update?commit=true",
+        "https://solr.peviitor.ro/solr/job/update?commit=true",
         "-d", cleanup2
     ], { encoding: "utf8" });
 });
@@ -99,7 +99,7 @@ test("remove-404 command - update vdate for valid URL", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
-        "http://localhost:8983/solr/job/update?commit=true",
+        "https://solr.peviitor.ro/solr/job/update?commit=true",
         "-d", jobData
     ], { encoding: "utf8" });
 
@@ -115,7 +115,7 @@ test("remove-404 command - update vdate for valid URL", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
-        "http://localhost:8983/solr/job/update?commit=true",
+        "https://solr.peviitor.ro/solr/job/update?commit=true",
         "-d", updateData
     ], { encoding: "utf8" });
 
@@ -124,7 +124,7 @@ test("remove-404 command - update vdate for valid URL", async () => {
 
     const queryResult = spawnSync("curl", [
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
-        "http://localhost:8983/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl) + "%22&fl=vdate"
+        "https://solr.peviitor.ro/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl) + "%22&fl=vdate"
     ], { encoding: "utf8" });
 
     const queryJson = JSON.parse(queryResult.stdout);
@@ -135,7 +135,7 @@ test("remove-404 command - update vdate for valid URL", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
-        "http://localhost:8983/solr/job/update?commit=true",
+        "https://solr.peviitor.ro/solr/job/update?commit=true",
         "-d", cleanup
     ], { encoding: "utf8" });
 });
@@ -160,7 +160,7 @@ test("remove-404 command - delete 404 job", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
-        "http://localhost:8983/solr/job/update?commit=true",
+        "https://solr.peviitor.ro/solr/job/update?commit=true",
         "-d", jobData
     ], { encoding: "utf8" });
 
@@ -169,7 +169,7 @@ test("remove-404 command - delete 404 job", async () => {
 
     const verifyResult = spawnSync("curl", [
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
-        "http://localhost:8983/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl404) + "%22"
+        "https://solr.peviitor.ro/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl404) + "%22"
     ], { encoding: "utf8" });
 
     const verifyJson = JSON.parse(verifyResult.stdout);
@@ -180,7 +180,7 @@ test("remove-404 command - delete 404 job", async () => {
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
         "-X", "POST",
         "-H", "Content-Type: application/json",
-        "http://localhost:8983/solr/job/update?commit=true",
+        "https://solr.peviitor.ro/solr/job/update?commit=true",
         "-d", deleteQuery
     ], { encoding: "utf8" });
 
@@ -189,7 +189,7 @@ test("remove-404 command - delete 404 job", async () => {
 
     const afterResult = spawnSync("curl", [
         "-s", "-u", `${SOLR_USER}:${SOLR_PASSWD}`,
-        "http://localhost:8983/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl404) + "%22"
+        "https://solr.peviitor.ro/solr/job/select?q=url:%22" + encodeURIComponent(jobUrl404) + "%22"
     ], { encoding: "utf8" });
 
     const afterJson = JSON.parse(afterResult.stdout);

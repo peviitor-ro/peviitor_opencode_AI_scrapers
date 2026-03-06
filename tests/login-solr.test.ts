@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("login-solr command works", async ({ page }) => {
-    await page.goto("http://localhost:8983/solr/");
+    await page.goto("https://solr.peviitor.ro/solr/");
     
     const loginHeading = page.locator("h1:has-text('Basic Authentication')");
     await expect(loginHeading).toBeVisible();
@@ -10,7 +10,7 @@ test("login-solr command works", async ({ page }) => {
     await page.fill('input[type="password"]', "SolrRocks");
     await page.click("button:has-text('Login')");
     
-    await page.waitForURL("http://localhost:8983/solr/#/");
+    await page.waitForURL("https://solr.peviitor.ro/solr/#/");
     
     const username = page.locator("text=Current Username");
     await expect(username).toBeVisible();

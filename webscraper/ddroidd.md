@@ -159,7 +159,7 @@ Extract from job description sections:
 Push to Solr using curl:
 ```bash
 curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
-  "http://localhost:8983/solr/job/update?commit=true" \
+  "https://solr.peviitor.ro/solr/job/update?commit=true" \
   -d '[{"url":"{JOB_URL}","title":"{TITLE}","company":"DDROIDD LTD SRL","cif":"40399734","location":["{LOCATION}"],"workmode":"{workmode}","tags":["{tag1}","{tag2}"],"date":"2026-02-17T00:00:00Z","status":"scraped"}]'
 ```
 
@@ -186,4 +186,4 @@ curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
 - Work mode is explicitly mentioned in job details (remote for Romania positions, hybrid for Cluj)
 - Push all 9 Romania jobs to Solr
 - workmode values must be exactly: "remote", "on-site", or "hybrid"
-- Verify with: `curl -s -u $SOLR_USER:$SOLR_PASSWD "http://localhost:8983/solr/job/select?q=cif:40399734"`
+- Verify with: `curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/select?q=cif:40399734"`

@@ -44,6 +44,7 @@
             <li><a href="tests.html">Teste</a></li>
             <li><a href="schemas.html">Schema Date</a></li>
             <li><a href="setup.html">Setup</a></li>
+            <li><a href="github-actions.html">GitHub Actions</a></li>
         </ul>
     </nav>
 
@@ -128,7 +129,7 @@
             <pre><code>/update-solr</code></pre>
             
             <h3>Pași:</h3>
-            <div class="step">1. Verifică dacă Solr rulează: <code>curl -s http://localhost:8983/solr/admin/ping</code></div>
+            <div class="step">1. Verifică dacă Solr rulează: <code>curl -s https://solr.peviitor.ro/solr/admin/ping</code></div>
             <div class="step">2. Dacă nu rulează, pornește containerul: <code>docker start peviitor-solr</code></div>
             <div class="step">3. Formatează datele conform Job/Company schema (vezi SCHEMAS.md)</div>
             <div class="step">4. Trimite către Solr folosind curl cu credențiale</div>
@@ -142,16 +143,16 @@
             
             <h3>Exemplu API - Adaugă job-uri:</h3>
             <pre><code>curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
-  'http://localhost:8983/solr/job/update?commit=true' \
+  'https://solr.peviitor.ro/solr/job/update?commit=true' \
   -d '[{"url":"https://example.com/job","title":"Software Engineer","company":"Example SRL","status":"scraped","date":"2026-02-19T00:00:00Z"}]'</code></pre>
             
             <h3>Exemplu API - Adaugă companii:</h3>
             <pre><code>curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
-  'http://localhost:8983/solr/company/update?commit=true' \
+  'https://solr.peviitor.ro/solr/company/update?commit=true' \
   -d '[{"id":"12345678","company":"Example SRL","status":"activ","website":["https://example.com"],"career":["https://example.com/careers"]}]'</code></pre>
             
             <h3>Verificare:</h3>
-            <pre><code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "http://localhost:8983/solr/job/select?q=company:Example%20SRL"</code></pre>
+            <pre><code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/select?q=company:Example%20SRL"</code></pre>
             
             <div class="note">
                 <strong>Important:</strong>
@@ -173,7 +174,7 @@
             
             <h3>Pași:</h3>
             <div class="step">1. Verifică că Solr rulează</div>
-            <div class="step">2. Deschide Chrome la <code>http://localhost:8983/solr/</code></div>
+            <div class="step">2. Deschide Chrome la <code>https://solr.peviitor.ro/solr/</code></div>
             <div class="step">3. Completează formularul de login:</div>
 <div class="step" style="margin-left: 1rem;">- Username: <code>$SOLR_USER</code></div>
             <div class="step" style="margin-left: 1rem;">- Password: <code>$SOLR_PASSWD</code></div>
@@ -199,7 +200,7 @@
             
             <h3>Exemplu API (corect):</h3>
             <pre><code>curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
-  'http://localhost:8983/solr/job/update?commit=true' \
+  'https://solr.peviitor.ro/solr/job/update?commit=true' \
   -d '{"delete":{"query":"url:\"https://example.com/job\""}}'</code></pre>
             
             <div class="note">
@@ -284,7 +285,7 @@
             <pre><code>/remove-404</code></pre>
             
             <h3>Pași:</h3>
-            <div class="step">1. Verifică că Solr rulează: <code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "http://localhost:8983/solr/job/admin/ping"</code></div>
+            <div class="step">1. Verifică că Solr rulează: <code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/admin/ping"</code></div>
             <div class="step">2. Obține data de azi în format ISO (YYYY-MM-DD): <code>date -u +"%Y-%m-%dT00:00:00Z"</code></div>
             <div class="step">3. Interoghează maxim 10 job-uri unde vdate NU este setat SAU vdate este anterior datei de azi</div>
             <div class="step">4. Pentru fiecare URL:</div>
@@ -294,14 +295,14 @@
             <div class="step">5. Raportează rezultatele: "Validated X URLs: Y valid (updated vdate), Z removed (404)"</div>
             
             <h3>Exemplu API - Interogare jobs pentru verificare:</h3>
-            <pre><code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "http://localhost:8983/solr/job/select?q=NOT+vdate:*&rows=10&fl=url,vdate"</code></pre>
+            <pre><code>curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/select?q=NOT+vdate:*&rows=10&fl=url,vdate"</code></pre>
             
             <h3>Exemplu API - Verificare 404:</h3>
             <pre><code>curl -s -o /dev/null -w "%{http_code}" "https://example.com/job"</code></pre>
             
             <h3>Exemplu API - Actualizare vdate (URL valid):</h3>
             <pre><code>curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
-  'http://localhost:8983/solr/job/update?commit=true' \
+  'https://solr.peviitor.ro/solr/job/update?commit=true' \
   -d '[{"url":"https://example.com/job","vdate":"2026-02-19T00:00:00Z"}]'</code></pre>
             
             <h3>Verificare cu Chrome (pentru "not available"):</h3>
@@ -314,7 +315,7 @@
             
             <h3>Exemplu API - Ștergere (URL 404):</h3>
             <pre><code>curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST -H "Content-Type: application/json" \
-  'http://localhost:8983/solr/job/update?commit=true' \
+  'https://solr.peviitor.ro/solr/job/update?commit=true' \
   -d '{"delete":{"query":"url:\"https://example.com/job\""}}'</code></pre>
             
             <div class="note">

@@ -11,6 +11,8 @@ Available OpenCode commands for job scraping automation.
 - [/login-solr](#login-solr) - Login to Solr admin panel
 - [/docs-update](#docs-update) - Update project documentation
 - [/instructions](#instructions) - Follow workflow for adding/changing commands
+- [/remove-404](#remove-404) - Validate job URLs and remove 404s
+- [/clean-project](#clean-project) - Clean temporary files and update docs
 
 ---
 
@@ -312,3 +314,65 @@ This is a meta-command that defines the workflow for adding or changing other co
 - Documentation: `docs/` directory
 - Commands: `.opencode/commands/` directory
 - Company data: Solr company core (https://solr.peviitor.ro/solr/company/select)
+
+---
+
+## /remove-404
+
+Validate job URLs and remove jobs that return 404 errors.
+
+### Usage
+
+```
+/remove-404
+```
+
+### Steps
+
+1. Query Solr for jobs where `vdate` is NOT set OR `vdate` is before today
+2. For each URL:
+   - Check if URL returns 404
+   - If 404: Delete job from Solr using delete-by-query
+   - If valid (200): Update `vdate` field with today's date
+3. Report results: "Validated X URLs: Y valid (updated vdate), Z removed (404)"
+
+### Important
+
+- Limit to 10 URLs per execution to avoid timeouts
+- Always use delete-by-query format: `{"delete":{"query":"url:\"https://example.com/job\""}}`
+- Do NOT use `_delete_:true` format
+
+### Example API - Query jobs for validation:
+
+```bash
+curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/select?q=NOT+vdate:*&rows=10&fl=url,vdate"
+```
+
+---
+
+## /clean-project
+
+Clean project by removing temporary files and updating documentation.
+
+### Usage
+
+```
+/clean-project
+```
+
+### Steps
+
+1. Remove temporary PowerShell scripts (push_levi9.ps1, process_ddroidd.ps1, etc.)
+2. Remove temporary JSON files (levi9_jobs.json, artsoft_jobs.json, etc.)
+3. Remove test results and node_modules (can be recreated with `cd tests && npm install`)
+4. Remove .opencode/node_modules and lock files
+5. Update HTML documentation in `docs/` folder
+
+### Files to KEEP
+
+- `start-chrome.ps1` - needed for Chrome remote debugging
+- `webscraper/` - company scraping prompts
+- Company data in Solr company core (not in websites.md)
+- `docs/` - HTML documentation
+- `tests/*.test.ts` - test source files
+- `.opencode/commands/*.md` - command definitions
