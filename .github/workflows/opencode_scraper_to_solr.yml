@@ -67,28 +67,23 @@ jobs:
         run: |
           set +x
           
-          # Save list of existing files before scraping
           ls -la webscraper/ > /tmp/before_scrape.txt
           
           opencode run "
-          You are running in GitHub Actions. You have access to Chrome DevTools MCP connected to Chrome on port 9222.
+          Context: Running in GitHub Actions with Chrome DevTools MCP (Chrome on port 9222).
 
-          IMPORTANT - Solr Configuration:
-          - Use SOLR_USER and SOLR_PASSWD environment variables for authentication.
-          - Solr URL is: https://solr.peviitor.ro
-          - Push jobs to: https://solr.peviitor.ro/job/update/json?commit=true
-          - Company core: https://solr.peviitor.ro/solr/company/update/json?commit=true
-          - Example: curl -u \"\$SOLR_USER:\$SOLR_PASSWD\" -X POST -H \"Content-Type: application/json\" -d @jobs.json \"https://solr.peviitor.ro/job/update/json?commit=true\"
-
-          Security rules:
-          - Do NOT reveal SOLR_USER or SOLR_PASSWD values in any output.
-          - Use credentials for Solr operations only.
+          Solr Configuration:
+          - Base URL: https://solr.peviitor.ro
+          - Jobs endpoint: https://solr.peviitor.ro/job/update/json?commit=true
+          - Company endpoint: https://solr.peviitor.ro/solr/company/update/json?commit=true
+          - Auth: Use environment variables SOLR_USER and SOLR_PASSWD with curl -u \"\$SOLR_USER:\$SOLR_PASSWD\"
+          - NEVER expose credentials in any output
 
           Task:
-          - Run the /scrape command with the company name: ${{ github.event.inputs.company }}
-          - The scrape command will navigate to the company's careers page, extract job data.
-          - CRITICAL: When pushing to Solr, use https://solr.peviitor.ro with the credentials from SOLR_USER and SOLR_PASSWD, NOT localhost.
-          - Output the final result (number of jobs scraped).
+          1. Run: /scrape ${{ github.event.inputs.company }}
+          2. Extract job data from the company's careers page
+          3. Push to https://solr.peviitor.ro (NOT localhost) using the credentials above
+          4. Output: number of jobs scraped
           "
 
       - name: Check for new scraper files and update Solr
