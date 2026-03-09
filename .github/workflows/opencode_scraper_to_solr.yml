@@ -67,8 +67,6 @@ jobs:
         run: |
           set +x
           
-          ls -la webscraper/ > /tmp/before_scrape.txt
-          
           opencode run "
           Context: Running in GitHub Actions with Chrome DevTools MCP (Chrome on port 9222).
 
@@ -85,6 +83,17 @@ jobs:
           3. Push to https://solr.peviitor.ro (NOT localhost) using the credentials above
           4. Output: number of jobs scraped
           "
+
+      - name: Update Solr company
+        env:
+          SOLR_USER: ${{ secrets.SOLR_USER }}
+          SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
+        run: |
+          COMPANY="${{ github.event.inputs.company }}"
+          curl -u "$SOLR_USER:$SOLR_PASSWD" \
+            -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
+            -H "Content-Type: application/json" \
+            -d "[{\"id\": \"$COMPANY\", \"name\": \"$COMPANY\"}]"
 
       - name: Verify data in Solr
         env:
