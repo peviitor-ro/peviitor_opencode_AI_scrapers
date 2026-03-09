@@ -141,3 +141,5 @@ jobs:
           else
             echo "No new scraper file created"
           fi
+          In the end select data newly added to SOLR and make sure the fields you pushed to SOLR match the job model and if you pushed any data to company make sure they match to company model from
+          github peviitor-ro organization peviitor_core repository
