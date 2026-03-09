@@ -256,6 +256,209 @@ Note:
 - When updating existing company, ALWAYS include both lastScraped and scraperFile fields - this is atomic add, not overwrite
 - Try to extract expirationdate from job page (look for "apply by", "expires", "valid until", "deadline" text). If found, parse the date and convert to ISO8601. If not found, leave empty.
 - **IMPORTANT - WEBSITE PRIORITY**: When company has multiple websites/careers pages, ALWAYS prioritize .ro domains and put them FIRST in arrays. Example: use ziramarketing.ro, NOT ziramarketing.com
+- for details:
+
+  You are running in GitHub Actions. You have access to Chrome DevTools MCP connected to Chrome on port 9222.
+  
+  IMPORTANT - Solr Configuration:
+  - Use SOLR_USER and SOLR_PASSWD environment variables for authentication.
+  - Solr URL is: https://***.peviitor.ro
+  - Example: curl -u \"\$SOLR_USER:\$SOLR_PASSWD\" \"https://***.peviitor.ro/***/job/select?q=status:scraped&wt=json&rows=1\"
+  
+  Security rules:
+  - Do NOT reveal SOLR_USER or SOLR_PASSWD values in any output.
+  - Use credentials for Solr operations only.
+  
+  Follow the workflow in AGENTS.md and instructions.md to validate jobs:
+  
+  1. First query SOLR for a job with status NOT verified:
+     curl -u \"\$SOLR_USER:\$SOLR_PASSWD\" 'https://***.peviitor.ro/***/job/select?q=-status:verified&wt=json&rows=1'
+  
+  2. Open the job URL from SOLR in Chrome using chrome-devtools
+  
+  3. Extract and verify all fields (salary, tags, workmode, etc.). follow instructions from instructions.md and AGENTS.md file from this repository.
+  
+  4. If job is no longer available (shows 'expired' or 'no longer available'), delete from SOLR:
+     curl -u \"\$SOLR_USER:\$SOLR_PASSWD\" -X POST -H 'Content-Type: application/json' \\
+       'https://***.peviitor.ro/***/job/update?commit=true' \\
+       -d '{\"delete\": [\"<JOB_URL>\"]}'
+  
+  5. Otherwise, use atomic update with {\"set\": \"value\"} to update verified fields and set status='verified', vdate to today's date in ISO8601 format (e.g., 2026-03-08T00:00:00Z):
+     curl -u \"\$SOLR_USER:\$SOLR_PASSWD\" -X POST -H 'Content-Type: application/json' \\
+       'https://***.peviitor.ro/***/job/update?commit=true' \\
+       -d '{\"add\": {\"doc\": {\"url\": \"<JOB_URL>\", \"status\": {\"set\": \"verified\"}, \"vdate\": {\"set\": \"2026-03-08T00:00:00Z\"}}}}'
+  
+  6. Verify the update by querying SOLR:
+     curl -u \"\$SOLR_USER:\$SOLR_PASSWD\" 'https://***.peviitor.ro/***/job/select?q=url:<JOB_URL>&wt=json'
+  
+  7. for tags we are interested if job is entry level or mid or senior. we also need to extract required skills, industry.
+  tags are one of the most IMPORTANT part why we open the page in Chrome. so extract up to 10 most important tags.
+  
+  9. extract the salary. if there is just one salary displayed then extract this one from the page. This one is important to have salary.
+  if there is "lei" transform it to "RON"
+  
+  10. limit to 25 jobs
+  Output the final result (number of jobs validated).
+  11. use company name as uppercase. if lowercase in *** please transform it to uppercase. we always want company name with uppercase in job and company schema
+  12. use User-Agent for OLX to mimic user browser calls. try to make olx work. there are multiple URLs that expired on olx. we need to validate them not to skip them
+  13. use olx-pages-helper.md instructions on how to avoid CAPTCHA
+ ### 1. Job & Company Models
+Read the README from peviitor-core to understand the data models:
+- **URL**: https://github.com/peviitor-ro/peviitor_core/blob/main/README.md
+- **Content**: Job Model Schema and Company Model Schema
+
+### 2. Solr Schemas
+Access the live Solr instance to see the actual field definitions:
+- **Base URL**: https://solr.peviitor.ro
+- **Credentials**: `$SOLR_USER:$SOLR_PASSWD`
+
+#### Job Core Schema
+```bash
+curl -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/schema"
+```
+
+#### Company Core Schema
+```bash
+curl -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/schema"
+```
+
+## Job Model Fields (from Solr)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `url` | string | Yes | Full URL to job detail page (unique key) |
+| `title` | text_general | Yes | Position title |
+| `company` | string | No | Hiring company name, Always use uppercase. |
+| `cif` | string | No | CIF/CUI of the company |
+| `location` | text_general | No | Romanian cities/addresses |
+| `tags` | text_general[] | No | Skills/education/experience |
+| `workmode` | string | No | "remote", "on-site", "hybrid" |
+| `date` | pdate | No | Scrape date (ISO8601) |
+| `status` | string | No | "scraped", "tested", "published", "verified" |
+| `vdate` | pdate | No | Verified date |
+| `expirationdate` | pdate | No | Job expiration date |
+| `salary` | text_general | No | Format: "MIN-MAX CURRENCY" |
+
+## Company Model Fields (from Solr)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | CIF/CUI (unique key) |
+| `company` | string | Yes | Legal name from Trade Register . always use uppercase.|
+| `brand` | string | No | Commercial brand name |
+| `group` | string | No | Parent company group |
+| `status` | string | No | "activ", "suspendat", "inactiv", "radiat" |
+| `location` | text_general | No | Romanian cities/addresses |
+| `website` | string[] | No | Official company website(s) |
+| `career` | string[] | No | Career page URL(s) |
+| `lastScraped` | string | No | Last scrape date (ISO8601) |
+| `scraperFile` | string | No | Name of scraper file used |
+
+## Workflow: Verifying Jobs
+
+### Step 1: Find Unverified Jobs in SOLR
+When starting a new verification session, query SOLR for jobs that are NOT verified:
+```bash
+curl -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/select?q=status:scraped&wt=json&rows=1"
+```
+
+### Step 2: Open Job URL
+Navigate to the job's URL from the SOLR response.
+
+### Step 3: Extract & Verify Data
+Follow the extraction process in AGENTS.md
+transform company name to uppercase
+
+### Step 4: Push Updates to SOLR
+Use **atomic update** to add verified fields. Status should be set to "verified".
+
+**Important**: Use atomic update with `{"set": "value"}` to preserve existing fields:
+
+```bash
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
+  "https://solr.peviitor.ro/solr/job/update?commit=true" \
+  -d "{\"add\": {\"doc\": {\"url\": \"<JOB_URL>\", \
+  \"company\": {\"set\": \"<company>\"}, \
+  \"cif\": {\"set\": \"<cif>\"}, \
+  \"salary\": {\"set\": \"<salary>\"}, \
+  \"workmode\": {\"set\": \"<workmode>\"}, \
+  \"tags\": {\"set\": [\"tag1\", \"tag2\"]}, \
+  \"status\": {\"set\": \"verified\"}, \
+  \"vdate\": {\"set\": \"2026-03-08T00:00:00Z\"}}}}"
+```
+
+### Step 5: Verify the Update in SOLR
+Always query SOLR to confirm all fields were updated correctly:
+```bash
+curl -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/select?q=url:<JOB_URL>&wt=json"
+```
+
+**Note**: Date fields (vdate, date, expirationdate) must use ISO8601 format: `YYYY-MM-DDTHH:MM:SSZ`
+
+### Step 6: Handle Expired Jobs
+If job is no longer available on the original URL:
+```bash
+curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
+  "https://solr.peviitor.ro/solr/job/update?commit=true" \
+  -d "{\"delete\": [\"<JOB_URL>\"]}"
+```
+
+## Notes
+- Use `curl` with `-u $SOLR_USER:$SOLRPASSWD` for authentication
+- The Solr instance uses `text_general` field type for most text fields
+- Both cores have copy fields that aggregate text to `_text_` for full-text search
+
+# Agent Instructions
+
+When working with this project, follow these steps:
+
+## 1. Read Documentation First
+- Start by reading `instructions.md` in this directory to understand the project context
+- Check for any existing documentation before making assumptions
+
+## 2. Job & Company Models
+To understand the data models:
+1. Fetch from GitHub: `https://github.com/peviitor-ro/peviitor_core/blob/main/README.md`
+2. Or use the cached info in `instructions.md`
+
+## 3. Accessing Solr Schemas
+When asked to read Solr schemas:
+
+### Job Core
+```bash
+curl -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/job/schema"
+```
+
+### Company Core
+```bash
+curl -u $_SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/schema"
+```
+
+**Important**: 
+- Use `curl` with `-u $SOLR_USER:$SOLR_PASSWD` for Basic Auth
+- WebFetch alone won't work due to 401 errors - curl/bash is required
+- Do NOT use the username "$SOLR_USER:$SOLR_PASSWD" in URL format - use `-u` flag instead
+- you are running in PROD, be careful; you don't use localhost:8983
+
+## 4. Key Differences from Documentation
+- The README in peviitor_core describes the conceptual model
+- The Solr schemas show the actual implementation (field types, indexing)
+- Some fields may differ slightly between conceptual and implementation
+
+## 5. Authentication
+- Solr credentials: `$SOLR_USER` / `$SOLR_PASSWD`
+- Always use Basic Auth via curl `-u` flag
+
+## 6. Verification Workflow
+When asked to verify. First query SOL a job:
+1R for a job with status="scraped" (not yet verified)
+2. Open the job URL from SOLR
+3. Extract missing fields (salary, tags, cif, etc.)
+4. Use targetare.ro to find company CIF if needed
+5. **Use atomic update** with `{"set": "value"}` to preserve existing fields
+6. Push atomic update with all verified fields and status="verified"
+7. **Verify the update** by querying SOLR to confirm all fields
+8. If job is no longer available, delete it from SOLR
 
 CRITICAL - AUTOMATIC PAGINATION:
 - The model MUST NOT stop until ALL jobs are collected from ALL pages
