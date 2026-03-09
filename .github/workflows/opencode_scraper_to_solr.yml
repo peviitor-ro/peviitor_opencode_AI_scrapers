@@ -86,55 +86,11 @@ jobs:
           4. Output: number of jobs scraped
           "
 
-      - name: Check for new scraper files and update Solr
+      - name: Verify data in Solr
         env:
           SOLR_USER: ${{ secrets.SOLR_USER }}
           SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
-          COMPANY_NAME: "${{ github.event.inputs.company }}"
         run: |
-          # Find new files created in webscraper/
-          comm -23 <(ls -1 webscraper/*.md | sort) <(cat /tmp/before_scrape.txt | grep webscraper | awk '{print $NF}' | sort) > /tmp/new_files.txt
-          
-          if [ -s /tmp/new_files.txt ]; then
-            SCRAPER_FILE=$(cat /tmp/new_files.txt | head -1)
-            SCRAPER_FILE=$(basename "$SCRAPER_FILE")
-            echo "New scraper file detected: $SCRAPER_FILE"
-            
-            # Configure git
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            
-            # Add and commit the new scraper file
-            git add "webscraper/$SCRAPER_FILE"
-            git commit -m "Add scraper file: $SCRAPER_FILE" || echo "No changes to commit"
-            
-            # Push to origin
-            git push origin main
-            
-            # Extract company name from scraper file (remove .md extension)
-            COMPANY_FROM_FILE=$(basename "$SCRAPER_FILE" .md)
-            echo "Company name from file: $COMPANY_FROM_FILE"
-            
-            # Query Solr to get the company CUI
-            echo "Querying Solr for company CUI..."
-            COMPANY_RESPONSE=$(curl -s -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/company/select?q=brand:*$COMPANY_FROM_FILE*&rows=1")
-            CUI=$(echo "$COMPANY_RESPONSE" | grep -oP '"id":"\K[^"]+' || echo "")
-            
-            if [ -n "$CUI" ]; then
-              echo "Found CUI: $CUI for company $COMPANY_FROM_FILE"
-              
-              # Atomic add to Solr company core with scraperFile
-              TODAY=$(date +%Y-%m-%d)
-              curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
-                -H "Content-Type: application/json" \
-                -d "[{\"id\": \"$CUI\", \"lastScraped\": \"$TODAY\", \"scraperFile\": \"$SCRAPER_FILE\"}]"
-              
-              echo "Updated Solr company core with scraperFile: $SCRAPER_FILE"
-            else
-              echo "Company not found in Solr, skipping Solr update"
-            fi
-          else
-            echo "No new scraper file created"
-          fi
-          In the end select data newly added to SOLR and make sure the fields you pushed to SOLR match the job model and if you pushed any data to company make sure they match to company model from
-          github peviitor-ro organization peviitor_core repository
+          echo "Select data newly added to SOLR and make sure the fields match the job model"
+          echo "If you pushed any data to company, make sure they match the company model from"
+          echo "github peviitor-ro organization peviitor_core repository"
