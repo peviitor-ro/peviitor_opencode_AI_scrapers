@@ -302,3 +302,4 @@ Custom commands are defined in `.opencode/commands/` directory.
 - **IMPORTANT**: Always use the correct Solr delete-by-query format: `{"delete":{"query":"url:\"https://example.com/job\""}}` - do NOT use `_delete_:true` format
 - Company-specific scraping instructions are stored in `webscraper/{company}.md` files
 - Company data is stored in Solr company core - query using brand, company name, or CUI
+- DON'T USE jobs CORE, USE job CORE in SOLR !!!
