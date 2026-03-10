@@ -170,3 +170,4 @@ curl -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/job/select?q=ur
 - Use Chrome DevTools MCP for scraping (OLX: use User-Agent to avoid CAPTCHA)
 - Date format: ISO8601 (e.g., "2026-03-09T10:00:00Z")
 - use SOLR job core NOT jobs core
+- make sure you have meet job model 
