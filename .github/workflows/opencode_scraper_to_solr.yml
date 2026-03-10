@@ -78,10 +78,12 @@ jobs:
           - NEVER expose credentials in any output
 
           Task:
-          1. Run: /scrape ${{ github.event.inputs.company }}
-          2. Extract job data from the company's careers page
-          3. Push to https://solr.peviitor.ro (NOT localhost) using the credentials above
-          4. Output: number of jobs scraped
+          1. read job model make sure you understand job model and company model
+          2. Run: /scrape ${{ github.event.inputs.company }}
+          3. Extract job data from the company's careers page based on job model
+          4. Push to https://solr.peviitor.ro (NOT localhost) using the credentials above
+          5. validate the data pushed meet job model
+          6. Output: number of jobs scraped
           "
 
       - name: Update Solr company
