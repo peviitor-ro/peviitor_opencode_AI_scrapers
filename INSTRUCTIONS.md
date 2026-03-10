@@ -60,3 +60,4 @@ When the user asks to scrape a company (e.g., `/scrape VODAFONE`):
 - Commands in `.opencode/commands/` directory
 - Company data is stored in Solr company core
 - check schema for both job model and company model to understand what you need to scrape; in schema you also have definitions what is important.
+- use ATOMIC update for SOLR update with add and set
