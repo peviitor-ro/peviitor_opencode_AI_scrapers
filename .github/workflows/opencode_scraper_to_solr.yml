@@ -77,35 +77,38 @@ jobs:
           - Auth: Use environment variables SOLR_USER and SOLR_PASSWD with curl -u \"\$SOLR_USER:\$SOLR_PASSWD\"
           - NEVER expose credentials in any output
 
+          Company Model:
+          - id: CIF/CUI (8 digits, e.g. '10571572')
+          - company: Legal name with DIACRITICS
+          - brand: Commercial name (e.g. 'ADP Sector 6')
+          - status: 'activ', 'suspendat', 'inactiv', 'radiat'
+          - location: Array of cities (e.g. ['București'])
+          - website: Array of URLs
+          - career: Array of career page URLs
+          - lastScraped: Date of scrape
+          - scraperFile: Name of scraper file
+
           Task:
-          1. read job model make sure you understand job model and company model
+          1. read job model and company model from SCHEMAS.md
           2. Run: /scrape ${{ github.event.inputs.company }}
           3. Extract job data from the company's careers page based on job model
-          4. Push to https://solr.peviitor.ro (NOT localhost) using the credentials above
-          5. validate the data pushed meet job model
-          6. Output: number of jobs scraped
+          4. For the company:
+             - Search ANAF API to get CIF
+             - If CIF found, add/update company in SOLR with: id (CIF), company (official name), brand (input name), location, career (careers URL)
+             - Use atomic update if company already exists (set missing fields only)
+          5. Push jobs to job core
+          6. Output: number of jobs scraped and company details added
 
           Important!
           1. use job core NOT jobs in solr
-          2. make sure job model is met; company cif is placed in id in company core in solr
+          2. company id must be CIF (8 digits), NOT the brand name
+          3. if you cannot find CIF, do not add company - just scrape jobs
           "
-
-      - name: Update Solr company
-        env:
-          SOLR_USER: ${{ secrets.SOLR_USER }}
-          SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
-        run: |
-          COMPANY="${{ github.event.inputs.company }}"
-          curl -u "$SOLR_USER:$SOLR_PASSWD" \
-            -X POST "https://solr.peviitor.ro/solr/company/update/json?commit=true" \
-            -H "Content-Type: application/json" \
-            -d "[{\"id\": \"$COMPANY\", \"name\": \"$COMPANY\"}]"
 
       - name: Verify data in Solr
         env:
           SOLR_USER: ${{ secrets.SOLR_USER }}
           SOLR_PASSWD: ${{ secrets.SOLR_PASSWD }}
         run: |
-          echo "Select data newly added to SOLR and make sure the fields match the job model"
-          echo "If you pushed any data to company, make sure they match the company model from"
-          echo "github peviitor-ro organization peviitor_core repository"
+          echo "Verify that the company was added correctly with proper id (CIF), company name, and career page"
+          echo "The OpenCode step should have already added the company to SOLR"
