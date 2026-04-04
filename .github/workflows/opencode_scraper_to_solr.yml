@@ -103,6 +103,7 @@ jobs:
           1. use job core NOT jobs in solr
           2. company id must be CIF (8 digits), NOT the brand name
           3. if you cannot find CIF, do not add company - just scrape jobs
+          4. if you don't have access to tmp use current folder where you have access to create any intermediar file
           "
 
       - name: Verify data in Solr
