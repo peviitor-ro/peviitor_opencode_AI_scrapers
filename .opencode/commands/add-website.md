@@ -8,8 +8,8 @@ Add a new company to the Solr company core by automatically researching company 
 Steps:
 1. Parse the company name from arguments (e.g., "EPAM")
 2. Search for company CUI using WebSearch: "EPAM Romania CUI"
-3. Navigate to targetare.ro direct URL: https://www.targetare.ro/{CUI}/{company-slug}
-4. Extract company details from targetare.ro:
+3. Call DemoANAF API: https://demoanaf.ro/api/company/{CUI}
+4. Extract company details from JSON response:
    - Full legal company name in Romania
    - CUI/CIF (fiscal code) - REQUIRED
    - Registration number
@@ -48,7 +48,8 @@ Arguments:
 
 Workflow:
 1. Search for CUI using WebSearch: "COMPANY NAME Romania CUI"
-2. Navigate to targetare.ro direct URL: https://www.targetare.ro/{CUI}/{company-slug}
+2. Call DemoANAF API: curl "https://demoanaf.ro/api/company/{CUI}"
+3. Extract company details from JSON response
 3. Extract company details: full name, CUI (REQUIRED), registration number
 4. Search for the company's official careers page
 5. Present the found data to the user for verification:
@@ -89,27 +90,25 @@ curl -u "$SOLR_USER:$SOLR_PASSWD" -X POST "https://solr.peviitor.ro/solr/company
 
 Data Collection:
 - Use WebSearch to find CUI: "COMPANY NAME Romania CUI"
-- Navigate to targetare.ro direct URL: https://www.targetare.ro/{CUI}/{company-slug}
+- Call DemoANAF API to get company details: curl "https://demoanaf.ro/api/company/{CUI}"
 - Search Google or company website for careers page
 - **IMPORTANT**: When searching for websites, prioritize .ro domains
 - **ALWAYS put .ro domains first** in website[] and career[] arrays
 - If multiple careers pages exist, include all of them
 - Verify URLs are accessible before presenting
 
-How to Extract Data from targetare.ro:
+How to Extract Data from DemoANAF:
 1. First, use WebSearch to find the CUI for the company:
    - Search: "COMPANY NAME Romania CUI" (e.g., "EPAM Romania CUI")
-   - Find CUI from results (listafirme.ro, risco.ro, or targetare.ro)
-2. Once you have the CUI, navigate directly to:
-   - https://www.targetare.ro/{CUI}/{company-slug}
-   - Example: https://www.targetare.ro/33159615/epam-systems-international-srl
-3. Extract from the page:
-   - Full company name (title)
-   - CUI (shown as "Codul fiscal")
-   - Reg. Comerțului
-   - Address
-   - Phone, email, website (if available)
-4. For careers page, search: "COMPANY careers Romania"
+   - Find CUI from results (demoanaf.ro, listafirme.ro, etc.)
+2. Once you have the CUI, call DemoANAF API:
+   - curl "https://demoanaf.ro/api/company/{CUI}"
+   - Example: curl "https://demoanaf.ro/api/company/33159615"
+3. Extract from JSON response:
+   - name → company (with diacritics)
+   - cui → id (8 digits)
+   - inactive → status ("activ" if false, "inactiv" if true)
+   - headquartersAddress.locality → location
 
 Note:
 - ALWAYS save company to Solr company core - this is REQUIRED
@@ -118,14 +117,14 @@ Note:
 - The lastScraped field will be left empty for new entries
 - Do NOT overwrite existing entries - only add new ones
 - Verify all URLs are working before proposing to save
-- Check company status on targetare.ro - if status is "suspendat", "inactiv", or "radiat", warn the user (according to Company Model Schema, non-active companies should have their jobs removed)
+- Check company status from DemoANAF API (inactive field) - if status is "inactive" (inactive: true), warn the user (according to Company Model Schema, non-active companies should have their jobs removed)
 - **IMPORTANT**: When websites are found, ALWAYS prioritize .ro domains and put them FIRST in arrays
 
 Example Flow:
 1. User runs: /add-website EPAM
 2. AI searches: "EPAM Romania CUI"
 3. AI finds: EPAM SYSTEMS INTERNATIONAL SRL, CUI: 33159615
-4. AI navigates to: https://www.targetare.ro/33159615/epam-systems-international-srl
+4. AI calls DemoANAF: curl "https://demoanaf.ro/api/company/33159615"
 5. AI extracts details and searches for careers page
 6. AI presents to user:
    - Full Name: EPAM SYSTEMS INTERNATIONAL SRL

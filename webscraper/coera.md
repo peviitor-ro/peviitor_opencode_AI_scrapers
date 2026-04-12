@@ -117,7 +117,7 @@ When updating the company in Solr:
 1. Query: `curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/select?q=id:32519996&fl=id,company,brand,group,status,location,website,career,lastScraped,scraperFile"`
 2. Check if ANY of these fields are missing or empty: brand[], group[], website[], career[], location[]
 3. If ANY field is missing → search internet for missing data and update ALL fields:
-   - Use targetare.ro to get company details
+   - Use DemoANAF API to get company details: curl "https://demoanaf.ro/api/company/{CUI}"
    - Use WebSearch to find official website(s) - prioritize .ro domains
    - Use WebSearch to find careers page(s) - prioritize .ro domains
    - Use WebSearch to find parent company group

@@ -12,19 +12,23 @@
 
 ## Romania Jobs URL
 ```
-https://careers.epam.com/en/jobs?country=8150000000000001155
+https://careers.epam.com/en/jobs/romania
 ```
-This URL already filters for Romania. Use this as the base URL for pagination.
+This URL filters for Romania jobs. Use this as the base URL for pagination.
 
 ## Pagination
-- Base URL: `https://careers.epam.com/en/jobs?country=8150000000000001155`
-- Add `&page=N` for subsequent pages (e.g., `&page=2`, `&page=3`)
-- Total: 9 pages with 88 jobs
-- Last page shows "Viewing 81-88 out of 88 jobs found"
+- Use the page navigation buttons on the site OR append `&page=N` to the URL
+- **ALWAYS check the job count** - look for text "Viewing X-Y out of Z jobs found" in the status element
+- Continue scraping until there are no more pages (no "Next" button or reached last page)
+- The number of jobs changes over time - NEVER hardcode a specific number
 
-## Total Jobs
-- **88 Romania jobs** (as of Feb 2026)
-- 9 pages, 10 jobs per page (last page has 8 jobs)
+## How to Detect Total Jobs
+From the page status element, look for:
+- "Viewing 1-10 out of 76 jobs found" → Total: 76 jobs
+- "Viewing 11-20 out of 76 jobs found" → Page 2
+- Continue until "Viewing 71-76 out of 76 jobs found" → Last page
+
+**Important**: The total job count changes - always read it from the page dynamically!
 
 ## Work Mode Detection
 From the job listing text:
@@ -49,20 +53,20 @@ Example: `https://careers.epam.com/en/vacancy/senior-full-stack-abap-ui5-develop
 ## Scraping Steps
 
 1. **Navigate to EPAM careers with Romania filter**:
-   `https://careers.epam.com/en/jobs?country=8150000000000001155`
+   `https://careers.epam.com/en/jobs/romania`
 
 2. **Check total results**: Look for "Viewing X-Y out of Z jobs found" in the status element
 
-3. **For each page (1-9)**:
+3. **For each page**:
    a. Extract all job links from the page groups
    b. Each job has: title link, work mode text, location text
    c. Parse work mode: "HYBRID IN" / "REMOTE IN" / "OFFICE IN"
    d. Parse location: "ROMANIA: BUCHAREST" or "ROMANIA"
    e. **OPTIONAL - For more detailed data**: Click each job to extract tags
 
-4. **For page navigation**: Click page number button or add `&page=N` to URL
+4. **For page navigation**: Click page number button or click "Next" button
 
-5. **Repeat** until all 9 pages are exhausted
+5. **Repeat** until no more pages exist (check for "Next" button or last page)
 
 6. **Update Solr company core**: Use atomic upsert to update company with today's date (DO NOT overwrite - use id as unique key):
 
@@ -228,7 +232,7 @@ curl -u $SOLR_USER:$SOLR_PASSWD -X POST -H "Content-Type: application/json" \
 - Location text appears as: "ROMANIA" or "ROMANIA: BUCHAREST"
 - Some jobs show "relocation" tags (Cyprus, Malta) but location is still Romania - include them
 - EPAM uses their own careers platform (not SmartRecruiters)
-- Push all 88 jobs to Solr (9 pages)
+- **Push ALL jobs found** to Solr (dynamic count based on pagination)
 - workmode values must be exactly: "remote", "on-site", or "hybrid"
 - tags must be lowercase, no diacritics, max 20 entries
 - Commit to Solr after each batch (10 jobs) or at the end
@@ -240,33 +244,8 @@ When updating the company in Solr:
 1. Query: `curl -s -u $SOLR_USER:$SOLR_PASSWD "https://solr.peviitor.ro/solr/company/select?q=id:33159615&fl=id,company,brand,group,status,location,website,career,lastScraped,scraperFile"`
 2. Check if ANY of these fields are missing or empty: brand[], group[], website[], career[], location[]
 3. If ANY field is missing → search internet for missing data and update ALL fields:
-   - Use targetare.ro to get company details
+   - Use DemoANAF API to get company details: curl "https://demoanaf.ro/api/company/{CUI}"
    - Use WebSearch to find official website(s) - prioritize .ro domains
    - Use WebSearch to find careers page(s) - prioritize .ro domains
    - Use WebSearch to find parent company group
 4. If ALL fields are complete → only update lastScraped and scraperFile
-
-## Current Job Distribution (Feb 2026)
-
-- **By Seniority** (from filter counts):
-  - Senior: 48 jobs
-  - Lead: 14 jobs
-  - Middle: 7 jobs
-  - Senior Management: 7 jobs
-  - Middle Management: 6 jobs
-
-- **By Specialization**:
-  - Developer: 39 jobs
-  - Other: 32 jobs
-  - Software Architect: 5 jobs
-  - DevOps: 5 jobs
-  - Delivery Manager: 2 jobs
-
-- **Top Skills**:
-  - SAP FICO: 10 jobs
-  - SAP Logistics (SCM): 8 jobs
-  - Microsoft Azure: 8 jobs
-  - Java: 6 jobs
-  - CI/CD: 6 jobs
-
-- **Note**: No "Junior" or "Intern" positions visible in current Romania listings - all are Senior/Lead level

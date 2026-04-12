@@ -35,7 +35,7 @@ curl -u "$SOLR_USER:$SOLR_PASSWD" "https://solr.peviitor.ro/solr/company/select?
 **If NOT found**: Run `/add-website` with the company name.
 
 **If found but incomplete**: Research and update missing fields using:
-- targetare.ro (for CIF and company details)
+- DemoANAF API (for CIF and company details): https://demoanaf.ro/api/company/{CUI}
 - WebSearch (for website, career pages, parent group)
 - **Priority**: Always use .ro domains first in website[] and career[] arrays
 - **Brand**: Include if commercial name differs from legal name (e.g., "PARAPET" vs "PRODFER CONSTRUCT S.R.L.")

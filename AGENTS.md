@@ -231,7 +231,7 @@ No special environment variables are required for this project.
 ### Adding a New Company
 
 1. Use the `/add-website` command to add a new company
-2. The command will search for CUI using targetare.ro
+2. The command will search for CUI using WebSearch, then get details from DemoANAF API
 3. Verify the data with the user before saving
 
 ### Scraping Jobs
