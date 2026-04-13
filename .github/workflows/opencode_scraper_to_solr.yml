@@ -61,7 +61,7 @@ jobs:
           }
           EOF
 
-- name: Company to scrape
+      - name: Company to scrape
         run: |
           echo "Company: ${{ github.event.inputs.company }}"
 
