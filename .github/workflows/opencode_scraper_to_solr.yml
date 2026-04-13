@@ -61,6 +61,10 @@ jobs:
           }
           EOF
 
+- name: Company to scrape
+        run: |
+          echo "Company: ${{ github.event.inputs.company }}"
+
       - name: Run OpenCode scrape command
         env:
           SOLR_USER: ${{ secrets.SOLR_USER }}
